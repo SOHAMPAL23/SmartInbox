@@ -33,6 +33,9 @@ In an era of increasing digital communication, spam messages are more than just 
 - **Bulk Processing**: Upload files to check multiple messages at once.
 
 ---
+## ✨ Figma
+
+https://www.figma.com/design/WrSNfMpBFqShAP8NEFwE5g/SMART-INBOX?node-id=0-1&t=oKSXOne41sRMjGmM-1
 
 ## ✨ Key Features
 
@@ -61,6 +64,8 @@ In an era of increasing digital communication, spam messages are more than just 
 ## 🔄 Workflows & Architecture
 
 The application is designed with clear, simplified workflows for each user type.
+
+![alt text](image.png)
 
 ### Visitor Journey
 *From landing page to dashboard.*
