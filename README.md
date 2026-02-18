@@ -1,192 +1,199 @@
-# 📱 SMS Spam Detection App
+# �️ SmartInbox | SMS Spam Detection System
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Status](https://img.shields.io/badge/status-Active-success.svg)
-![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
-
-A modern, user-friendly web application designed to help users identify **Spam** vs. **Not Spam** SMS messages instantly. The platform also provides insightful analytics on spam trends over time, catering to both casual users and administrators.
+> **Advanced AI-powered protection against unsolicited messaging and digital threats.**
 
 ---
 
-## 📋 Table of Contents
-- [About the Project](#-about-the-project)
-- [Key Features](#-key-features)
-- [User Roles](#-user-roles)
-- [Workflows & Architecture](#-workflows--architecture)
-  - [Visitor Journey](#visitor-journey)
-  - [Regular User Journey](#regular-user-journey)
-  - [Admin Journey](#admin-journey)
-  - [Overall System Flow](#overall-system-flow)
-- [Getting Started](#-getting-started)
-- [Contributing](#-contributing)
-- [License](#-license)
+### � Navigation
+**[ 📘 Project Overview ](#-project-overview) • [ 👥 Consumer Workflow ](#-consumer-workflow) • [ 🏗 System Architecture ](#-system-architecture) • [ 🧩 Tech Stack ](#-tech-stack) • [ 🤝 Contributing ](#-contributing)**
 
 ---
 
-## 📖 About the Project
+## � Project Overview
 
-In an era of increasing digital communication, spam messages are more than just a nuisance—they are a security risk. This application provides a simple interface for anyone to verify the legitimacy of an SMS message. 
+### 🚩 The Problem
+In an era of unchecked digital communication, **SMS spam** has evolved from a nuisance into a significant security vector. Phishing attempts, fraudulent schemes, and unsolicited marketing flood user inboxes, compromising privacy and digital well-being.
 
-**Core Functionality:**
-- **Instant Analysis**: Paste a message and get an immediate "Spam" or "Not Spam" verdict.
-- **Trend Analysis**: Visualizes data to show spam volume trends over weeks and months.
-- **Bulk Processing**: Upload files to check multiple messages at once.
+### 🎯 The Solution
+**SmartInbox** is an enterprise-grade, machine-learning-powered application designed to detect, classify, and filter SMS spam in real-time. By leveraging natural language processing (NLP), it provides an instant verdict on message legitimacy.
 
----
-
-## ✨ Key Features
-
-### 🔍 For Everyone
-- Clean, intuitive Dashboard.
-- Real-time spam detection.
-- Historical data visualization.
-
-### 🛡️ For Admins
-- System status monitoring.
-- Adjustable spam detection sensitivity.
-- User management and analytics.
+### 🚀 Capabilities
+- **Real-time Inference**: Sub-millisecond classification of SMS content.
+- **Adaptive Learning**: System evolves with new spam patterns.
+- **Granular Analytics**: Detailed dashboards for usage and threat statistics.
+- **Multi-Role Access**: Tailored experiences for Visitors, Users, and Administrators.
 
 ---
 
-## 👥 User Roles
+## 👥 Consumer Workflow
 
-| Role | Description |
-| :--- | :--- |
-| **Visitor** | Can browse the landing page, read about the app, and sign up/login. |
-| **Regular User** | Can check messages, upload batch files, and view personal/global statistics. |
-| **Admin** | Has full access to system configuration, user logs, and model tuning parameters. |
+The platform serves three distinct user personas, each with a specialized journey.
 
----
+| User Type | Access Level | Primary Goal |
+| :--- | :--- | :--- |
+| **👤 Visitor** | Public | Explore features, understand the tech, and register. |
+| **🔐 User** | Authenticated | Scan messages, view history, and analyze personal stats. |
+| **🛡️ Admin** | Elevated | Monitor system health, retrain models, and manage users. |
 
-## 🔄 Workflows & Architecture
-
-The application is designed with clear, simplified workflows for each user type.
-
-### Visitor Journey
-*From landing page to dashboard.*
+### � User Journey Map
 
 ```mermaid
-flowchart TD
-    A[Start] --> B[Open Website]
-    B --> C[View Home Page]
-    C --> D[Read About App]
-    D --> E{Interested?}
-    E -- Yes --> F[Sign Up or Log In]
-    E -- No --> G[Leave Website]
-    F --> H[Dashboard]
-    G --> I[End]
-    H --> I
-```
-
-### Regular User Journey
-
-#### 1. Check SMS
-*The core functionality for verifying messages.*
-
-```mermaid
-flowchart TD
-    A[Start] --> B[Log In]
-    B --> C[User Dashboard]
-    C --> D[Paste SMS Message]
-    D --> E[Click 'Check Message']
-    E --> F{Result}
-    F -->|Spam| G[View Warning]
-    F -->|Not Spam| H[View Safe Status]
-    G --> I[End]
-    H --> I
-```
-
-#### 2. View Statistics
-*Understanding spam trends.*
-
-```mermaid
-flowchart TD
-    A[Start] --> B[Dashboard]
-    B --> C[Open Statistics]
-    C --> D[Select Time Range]
-    D --> E[View Spam Trends Graph]
-    E --> F[End]
-```
-
-#### 3. Upload Multiple Messages
-*Batch processing for high-volume checks.*
-
-```mermaid
-flowchart TD
-    A[Start] --> B[Dashboard]
-    B --> C[Upload CSV/Text File]
-    C --> D[System Processes File]
-    D --> E[View Batch Results]
-    E --> F[End]
-```
-
-### Admin Journey
-*System management and configuration.*
-
-```mermaid
-flowchart TD
-    A[Start] --> B[Admin Log In]
-    B --> C[Admin Dashboard]
-    C --> D[View System Metrics]
-    D --> E[Adjust Spam Threshold]
-    E --> F[Save Configuration]
-    F --> G[End]
-```
-
-### Overall System Flow
-*High-level view of the entire application structure.*
-
-```mermaid
-flowchart TD
-    A[Open App] --> B{Auth Status}
-    B -- Guest --> C[Log In / Register]
-    B -- User --> D[Dashboard]
-    C --> D
+graph TD
+    %% Nodes
+    Visitor((👤 Visitor))
+    User((🔐 Registered User))
+    Admin((🛡️ Admin))
     
-    subgraph Dashboard Features
-    D --> E[Check Single Message]
-    D --> F[View Statistics]
-    D --> G[Batch Upload]
+    Land[Landing Page]
+    Auth[Auth Gateway]
+    Dash_U[User Dashboard]
+    Dash_A[Admin Dashboard]
+    
+    Scan[🔍 Scan SMS]
+    Hist[📜 View History]
+    Stat[📊 Analytics]
+    
+    Sys[⚙️ System Config]
+    Train[🧠 Retrain Model]
+    Logs[📝 User Logs]
+
+    %% Edges
+    Visitor --> Land
+    Land -->|Sign Up / Login| Auth
+    
+    Auth -->|User Creds| Dash_U
+    Auth -->|Admin Creds| Dash_A
+    
+    Dash_U --> Scan
+    Dash_U --> Hist
+    Dash_U --> Stat
+    
+    Dash_A --> Sys
+    Dash_A --> Train
+    Dash_A --> Logs
+    
+    Scan -->|Result| Stat
+```
+
+---
+
+## 🏗 System Architecture
+
+SmartInbox is built on a decoupled, microservices-inspired architecture ensuring scalability and separation of concerns.
+
+### 🏛️ High-Level Design
+
+```mermaid
+flowchart TB
+    subgraph Client_Layer ["💻 Client Layer"]
+        UI[Web Interface]
+        Mobile[Mobile View]
     end
-    
-    E --> H[Logout]
-    F --> H
-    G --> H
-    H --> I[End]
+
+    subgraph API_Gateway ["🛡️ API Gateway"]
+        Auth_Service[Authentication]
+        Rate_Limiter[Rate Limiter]
+    end
+
+    subgraph Core_Services ["🧠 Core Services"]
+        Msg_Controller[Message Controller]
+        Analytics_Engine[Analytics Engine]
+    end
+
+    subgraph ML_Engine ["🤖 ML Inference Layer"]
+        Tokenizer[Tokenizer]
+        Model[Spam Classifier Model]
+    end
+
+    subgraph Data_Layer ["💾 Data Persistence"]
+        DB[(PostgreSQL DB)]
+        Cache[(Redis Cache)]
+    end
+
+    Client_Layer -->|HTTPS| API_Gateway
+    API_Gateway --> Core_Services
+    Core_Services -->|Text Payload| ML_Engine
+    Core_Services -->|Read/Write| Data_Layer
+    ML_Engine -->|Prediction Score| Core_Services
 ```
 
-## 🚀 Summary
-
-A quick overview of the primary user loop:
-
-```mermaid
-flowchart LR
-    A(Login) --> B(Check SMS)
-    B --> C(View Result)
-    C --> D(View Stats)
-    D --> E(Logout)
-```
+### 🔐 Security & Scalability
+- **JWT Authentication**: Stateless, secure session management.
+- **RESTful API**: Standardized communication between frontend and backend.
+- **Model Serialization**: Optimized pickle/joblib model serving for low latency.
 
 ---
 
-## 💻 Getting Started
+## 🧩 Tech Stack
 
-*(Instructions to be added once codebase is initialized)*
+### 🎨 Frontend
+- **Framework**: React.js / Next.js
+- **Styling**: Tailwind CSS (Dark Mode optimization)
+- **Visualization**: Recharts / Chart.js
+- **State Management**: Redux Toolkit / Context API
 
-1.  Clone the repository:
-    ```bash
-    git clone https://github.com/yourusername/sms-spam-detection.git
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    # or
-    pip install -r requirements.txt
-    ```
-3.  Run the application:
-    ```bash
-    npm start
-    # or
-    python app.py
-    ```
+### 🔌 Backend
+- **Server**: Python (FastAPI / Flask)
+- **Validation**: Pydantic
+- **Auth**: PyJWT + BCrypt
 
+### 🤖 Machine Learning
+- **Libraries**: Scikit-learn, NLTK, Pandas
+- **Algorithms**: Naive Bayes / Support Vector Machines (SVM)
+- **Vectorization**: TF-IDF / CountVectorizer
+
+### 💾 Database & DevOps
+- **Database**: PostgreSQL / SQLite (Dev)
+- **Containerization**: Docker
+- **CI/CD**: GitHub Actions
+
+---
+
+## ✨ Core Features
+
+### � User Features
+- **Instant Spam Check**: Copy-paste interface for immediate results.
+- **Bulk Upload**: Support for CSV/TXT file processing.
+- **History Log**: Searchable archive of all checked messages.
+- **Visual Reports**: Pie charts and trend lines for personal spam stats.
+
+### �️ Admin Features
+- **Global Overview**: Real-time monitor of total system requests.
+- **Model Performance**: View precision, recall, and F1-scores.
+- **User Management**: Ban/Unban capabilities for abuse prevention.
+- **System Health**: CPU/Memory usage monitoring (optional integration).
+
+---
+
+## ⚙️ Non-Functional Requirements
+
+- **🚀 Performance**: 95th percentile latency < 200ms for inference.
+- **📈 Scalability**: Horizontally scalable API layer to handle traffic spikes.
+- **🔒 Security**: Data encryption at rest and in transit (TLS 1.3).
+- **🛡️ Reliability**: 99.9% uptime target with automated failover.
+- **🧹 Maintainability**: Modular codebase with Type hints and comprehensive docstrings.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Follow these steps to contribute:
+
+1.  **Fork the Repository**
+2.  **Clone Locally**
+    ```bash
+    git clone https://github.com/SOHAMPAL23/SmartInbox.git
+    ```
+3.  **Create a Branch**
+    ```bash
+    git checkout -b feature/AmazingFeature
+    ```
+4.  **Commit Changes**
+    ```bash
+    git commit -m "feat: Add AmazingFeature"
+    ```
+5.  **Push to Branch**
+    ```bash
+    git push origin feature/AmazingFeature
+    ```
+6.  **Open a Pull Request**
