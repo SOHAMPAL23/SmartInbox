@@ -30,7 +30,12 @@ export const getSpamTrends = async (days = 7) => {
   return data;
 };
 
-// ── User Dashboard Stats ──────────────────────────────────────────────────────
+// ── User stats ──────────────────────────────────────────────────────────────────
+export const getJobStatus = async (jobId) => {
+  const res = await axiosClient.get(`/jobs/${jobId}`);
+  return res.data;
+};
+
 export const getUserStats = async () => {
   const { data } = await axiosClient.get("/user/stats");
   return data;
