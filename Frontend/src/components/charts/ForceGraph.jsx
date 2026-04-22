@@ -82,7 +82,7 @@ export const ForceGraph = ({ data }) => {
   }, [data]);
 
   return (
-    <div className="w-full h-[400px] glass-card overflow-hidden">
+    <div className="w-full h-[400px] minimal-card overflow-hidden">
       <svg ref={svgRef}></svg>
     </div>
   );

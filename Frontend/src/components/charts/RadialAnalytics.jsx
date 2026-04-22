@@ -59,7 +59,7 @@ export const RadialAnalytics = ({ percentage, label, color = "#06b6d4" }) => {
   return (
     <div className="flex flex-col items-center justify-center p-4">
       <svg ref={svgRef}></svg>
-      <span className="mt-2 text-slate-400 text-sm font-medium uppercase tracking-wider">{label}</span>
+      <span className="mt-2 text-slate-500 text-sm font-medium uppercase tracking-wider">{label}</span>
     </div>
   );
 };
