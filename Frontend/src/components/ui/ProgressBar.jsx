@@ -8,7 +8,7 @@ export const ProgressBar = ({ value = 0, max = 100, color = "cyan", className = 
   };
 
   return (
-    <div className={`h-2 w-full bg-slate-800 rounded-full overflow-hidden ${className}`}>
+    <div className={`h-2 w-full bg-slate-100 rounded-full overflow-hidden ${className}`}>
       <div
         className={`h-full rounded-full transition-all duration-1000 ease-out ${colorMap[color] || colorMap.cyan}`}
         style={{ width: `${pct}%` }}

@@ -9,7 +9,7 @@ export const Slider = ({ min = 0, max = 1, step = 0.01, value, onChange, label, 
     <div className={className}>
       {label && (
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">{label}</span>
+          <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">{label}</span>
           <span className="text-sm font-mono text-cyan-300">{value.toFixed(3)}</span>
         </div>
       )}
@@ -20,7 +20,7 @@ export const Slider = ({ min = 0, max = 1, step = 0.01, value, onChange, label, 
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className={`w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer ${colors[variant] || colors.primary}`}
+        className={`w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer ${colors[variant] || colors.primary}`}
       />
     </div>
   );
