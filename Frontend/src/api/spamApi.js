@@ -30,6 +30,12 @@ export const getSpamTrends = async (days = 7) => {
   return data;
 };
 
+// ── User Dashboard Stats ──────────────────────────────────────────────────────
+export const getUserStats = async () => {
+  const { data } = await axiosClient.get("/user/stats");
+  return data;
+};
+
 // ── History ───────────────────────────────────────────────────────────────────
 export const getHistory = async (page = 1, size = 20, isSpam = null) => {
   let url = `/user/history?page=${page}&size=${size}`;

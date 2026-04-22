@@ -2,33 +2,34 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
-// ── Authenticated client – always sends JWT ───────────────────────────────────
+/** Extract access token from localStorage — used by REST client and WebSocket. */
+export const getAccessToken = () => {
+  try {
+    const raw = localStorage.getItem("authTokens");
+    return raw ? (JSON.parse(raw)?.access_token ?? null) : null;
+  } catch {
+    return null;
+  }
+};
+
+// ── Authenticated axios client ────────────────────────────────────────────────
 export const axiosClient = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 30000,
+  timeout: 15000, // 15 s — fast-fail on stalled requests
 });
 
-// Auto-inject JWT from localStorage
+// Auto-inject JWT
 axiosClient.interceptors.request.use(
   (config) => {
-    try {
-      const raw = localStorage.getItem("authTokens");
-      if (raw) {
-        const tokens = JSON.parse(raw);
-        if (tokens?.access_token) {
-          config.headers["Authorization"] = `Bearer ${tokens.access_token}`;
-        }
-      }
-    } catch {
-      // Malformed storage – ignore
-    }
+    const token = getAccessToken();
+    if (token) config.headers["Authorization"] = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Handle 401 / 429 / 503
+// Handle common HTTP errors
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {

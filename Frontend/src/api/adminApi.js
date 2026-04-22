@@ -93,6 +93,21 @@ export const deleteUser = async (userId) => {
   return data;
 };
 
+export const getUserAnalyticsForAdmin = async (userId, days = 30) => {
+  const { data } = await axiosClient.get(`/admin/users/${userId}/analytics?days=${days}`);
+  return data;
+};
+
+export const sendAdminNotification = async ({ userId, title, message, type }) => {
+  const { data } = await axiosClient.post("/admin/notifications", {
+    user_id: userId,
+    title,
+    message,
+    type,
+  });
+  return data;
+};
+
 // ── Message / prediction monitoring ──────────────────────────────────────────
 
 /**
