@@ -50,18 +50,18 @@ export const CommandPalette = ({ isOpen, onClose }) => {
           initial={{ opacity: 0, scale: 0.9, y: -20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -20 }}
-          className="relative w-full max-w-xl glass rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+          className="relative w-full max-w-xl  rounded-2xl border border-slate-200 shadow-md overflow-hidden"
         >
-          <div className="p-4 border-b border-white/5 flex items-center gap-3">
+          <div className="p-4 border-b border-slate-100 flex items-center gap-3">
             <Search className="text-slate-500 w-5 h-5" />
             <input 
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Type a command or search..."
-              className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-600 text-lg"
+              className="flex-1 bg-transparent border-none focus:ring-0 text-slate-900 placeholder:text-slate-600 text-lg"
             />
-            <div className="px-2 py-1 bg-white/5 rounded text-[10px] font-bold text-slate-500 border border-white/10 uppercase">
+            <div className="px-2 py-1 bg-slate-50 rounded text-[10px] font-bold text-slate-500 border border-slate-200 uppercase">
               ESC
             </div>
           </div>
@@ -75,17 +75,17 @@ export const CommandPalette = ({ isOpen, onClose }) => {
                     navigate(action.path);
                     onClose(false);
                   }}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 cursor-pointer group transition-all"
+                  className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 cursor-pointer group transition-all"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-slate-800 rounded-lg group-hover:bg-cyan-500/20 transition-colors">
-                      <action.icon className="w-5 h-5 text-slate-400 group-hover:text-cyan-400" />
+                    <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-cyan-500/20 transition-colors">
+                      <action.icon className="w-5 h-5 text-slate-500 group-hover:text-cyan-400" />
                     </div>
-                    <span className="font-bold text-slate-300 group-hover:text-white">{action.label}</span>
+                    <span className="font-bold text-slate-600 group-hover:text-slate-900">{action.label}</span>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-[10px] font-bold text-slate-600 uppercase">Shortcut:</span>
-                    <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[10px] font-bold text-slate-400 border border-white/10">
+                    <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-500 border border-slate-200">
                       {action.shortcut}
                     </kbd>
                   </div>
@@ -98,11 +98,11 @@ export const CommandPalette = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          <div className="p-3 bg-white/5 border-t border-white/5 flex justify-between items-center text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+          <div className="p-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-[10px] font-bold text-slate-600 uppercase tracking-widest">
             <span>Commands Available: {actions.length}</span>
             <div className="flex gap-4">
-              <span className="flex items-center gap-1"><span className="text-slate-400">↑↓</span> Navigate</span>
-              <span className="flex items-center gap-1"><span className="text-slate-400">↵</span> Execute</span>
+              <span className="flex items-center gap-1"><span className="text-slate-500">↑↓</span> Navigate</span>
+              <span className="flex items-center gap-1"><span className="text-slate-500">↵</span> Execute</span>
             </div>
           </div>
         </motion.div>
