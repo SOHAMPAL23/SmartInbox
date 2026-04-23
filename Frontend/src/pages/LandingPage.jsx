@@ -40,7 +40,7 @@ export const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen relative bg-[#020617] text-white selection:bg-cyan-500/30 overflow-hidden">
+    <div className="min-h-screen relative bg-[#020617] text-slate-900 selection:bg-cyan-500/30 overflow-hidden">
       {/* 3D Background */}
       <Hero3D />
 
@@ -52,8 +52,8 @@ export const LandingPage = () => {
           className="flex items-center gap-3 cursor-pointer"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg shadow-lg shadow-cyan-500/20">
-            <Zap className="w-6 h-6 text-white" />
+          <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg shadow-lg ">
+            <Zap className="w-6 h-6 text-slate-900" />
           </div>
           <span className="font-bold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
             SmartInbox
@@ -65,15 +65,15 @@ export const LandingPage = () => {
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-6"
         >
-          <div className="hidden md:flex gap-8 text-sm font-bold uppercase tracking-widest text-slate-400">
-            <a href="#" onClick={handleInactiveLink} className="hover:text-white transition-colors hover:shadow-cyan-500/50">Platform</a>
-            <a href="#" onClick={handleInactiveLink} className="hover:text-white transition-colors hover:shadow-cyan-500/50">Docs</a>
+          <div className="hidden md:flex gap-8 text-sm font-bold uppercase tracking-widest text-slate-500">
+            <a href="#" onClick={handleInactiveLink} className="hover:text-slate-900 transition-colors hover:">Platform</a>
+            <a href="#" onClick={handleInactiveLink} className="hover:text-slate-900 transition-colors hover:">Docs</a>
           </div>
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/login")}
-            className="btn-premium flex items-center gap-2"
+            className="btn-primary flex items-center gap-2"
           >
             Get Started <ChevronRight size={18} />
           </motion.button>
@@ -90,7 +90,7 @@ export const LandingPage = () => {
         >
           <motion.div 
             variants={itemVariants}
-            className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase text-cyan-400 backdrop-blur-md"
+            className="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 px-4 py-2 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase text-cyan-400 backdrop-blur-md"
           >
             <Cpu size={14} className="animate-pulse" /> Next-Gen SMS Intelligence
           </motion.div>
@@ -100,12 +100,12 @@ export const LandingPage = () => {
             className="text-7xl md:text-8xl font-black tracking-tighter leading-[0.9]"
           >
             Secure Your <br />
-            <span className="neon-text-blue">Communications</span>
+            <span className="text-blue-600 font-semibold">Communications</span>
           </motion.h1>
 
           <motion.p 
             variants={itemVariants}
-            className="text-slate-400 text-xl max-w-2xl mx-auto font-medium leading-relaxed"
+            className="text-slate-500 text-xl max-w-2xl mx-auto font-medium leading-relaxed"
           >
             Enterprise-grade neural networks that detect and neutralize SMS spam with 99.9% precision. Powered by advanced TF-IDF + Character-level deep learning.
           </motion.p>
@@ -114,11 +114,11 @@ export const LandingPage = () => {
             variants={itemVariants}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
           >
-            <div className="flex bg-white/5 border border-white/10 rounded-2xl p-1 backdrop-blur-xl w-full sm:w-auto">
+            <div className="flex bg-slate-50 border border-slate-200 rounded-2xl p-1  w-full sm:w-auto">
               <input 
                 type="email" 
                 placeholder="Enter work email"
-                className="bg-transparent border-none focus:ring-0 px-6 py-3 text-white placeholder:text-slate-600 w-full sm:w-64"
+                className="bg-transparent border-none focus:ring-0 px-6 py-3 text-slate-900 placeholder:text-slate-600 w-full sm:w-64"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -126,7 +126,7 @@ export const LandingPage = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate("/login", { state: { email } })}
-                className="btn-premium whitespace-nowrap"
+                className="btn-primary whitespace-nowrap"
               >
                 Join Private Beta
               </motion.button>
@@ -163,28 +163,28 @@ export const LandingPage = () => {
         transition={{ delay: 1.5 }}
         className="fixed bottom-8 right-8 z-50"
       >
-        <div className="glass px-6 py-4 rounded-2xl flex items-center gap-4 border border-white/10 shadow-2xl">
+        <div className=" px-6 py-4 rounded-2xl flex items-center gap-4 border border-slate-200 shadow-md">
           <div className="relative">
             <div className="w-3 h-3 bg-emerald-500 rounded-full animate-ping absolute" />
             <div className="w-3 h-3 bg-emerald-500 rounded-full relative" />
           </div>
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">
+          <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">
             Nodes Online: 1,284
           </span>
         </div>
       </motion.div>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 py-12 bg-black/20 backdrop-blur-md">
+      <footer className="relative z-10 border-t border-slate-100 py-12 bg-black/20 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-cyan-500" />
             <span className="text-slate-500 font-bold text-sm tracking-widest uppercase">© 2026 SmartInbox AI</span>
           </div>
           <div className="flex gap-12 text-[10px] font-bold uppercase tracking-widest text-slate-600">
-            <a href="#" onClick={handleInactiveLink} className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" onClick={handleInactiveLink} className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" onClick={handleInactiveLink} className="hover:text-white transition-colors">Security Audit</a>
+            <a href="#" onClick={handleInactiveLink} className="hover:text-slate-900 transition-colors">Privacy Policy</a>
+            <a href="#" onClick={handleInactiveLink} className="hover:text-slate-900 transition-colors">Terms of Service</a>
+            <a href="#" onClick={handleInactiveLink} className="hover:text-slate-900 transition-colors">Security Audit</a>
           </div>
         </div>
       </footer>
