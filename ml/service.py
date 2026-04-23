@@ -144,8 +144,17 @@ class SpamDetectorService:
         except ImportError:
             pass
 
-        with open(pipeline_path, "rb") as f:
-            self._pipeline = pickle.load(f)
+        # Also alias logger in __main__ because some pickled objects might reference it
+        if "logger" not in sys.modules["__main__"].__dict__:
+            sys.modules["__main__"].logger = logger
+
+        try:
+            with open(pipeline_path, "rb") as f:
+                self._pipeline = pickle.load(f)
+        except Exception as pipe_exc:
+            import traceback
+            logger.error(f"[ML-DEBUG] Pipeline load failed: {pipe_exc}\n{traceback.format_exc()}")
+            raise ModelNotLoadedError(f"Pipeline corrupted or incompatible: {pipe_exc}")
 
         # Metadata (optional but expected)
         if metadata_path.exists():
@@ -212,6 +221,7 @@ class SpamDetectorService:
             raise InvalidInputError("Text must be a non-empty string.")
 
         text = text.strip()
+        logger.debug(f"[ML] Predicting for text (len={len(text)}): {text[:50]}...")
 
         # Transform text through the pipeline
         features = self._pipeline.transform([text])

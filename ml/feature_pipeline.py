@@ -18,18 +18,18 @@ from nltk.corpus import stopwords
 def init_nltk():
     try:
         # Silently check for resources, only download if missing
-        for resource in ['tokenizers/punkt', 'corpora/stopwords', 'corpora/wordnet', 'corpora/omw-1.4']:
+        for resource in ['tokenizers/punkt', 'corpora/stopwords', 'corpora/wordnet', 'corpora/omw-1.4', 'tokenizers/punkt_tab']:
             try:
                 nltk.data.find(resource)
             except LookupError:
-                print(f"[NLTK] Resource {resource} missing, attempting download...")
+                logger.info(f"[NLTK] Resource {resource} missing, attempting download...")
                 nltk.download(resource.split('/')[-1], quiet=True)
     except Exception as e:
-        print(f"[NLTK] Warning: Initialization failed ({e}). App will proceed.")
-
-init_nltk()
+        logger.warning(f"[NLTK] Initialization failed ({e}). App will proceed.")
 
 logger = logging.getLogger("ml.feature_pipeline")
+
+init_nltk()
 
 _PUNCT_TABLE = str.maketrans('', '', '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
 _STOP_WORDS = None

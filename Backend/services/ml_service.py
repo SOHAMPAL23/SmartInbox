@@ -111,9 +111,10 @@ def init_spam_detector() -> SpamDetectorService:
         detector._load()
         logger.info(f"[ML] Model {tag} loaded successfully.")
     except Exception as e:
+        import traceback
         global _last_error
-        _last_error = str(e)
-        logger.error(f"[ML] ERROR: Failed to load model: {e}")
+        _last_error = f"{str(e)}\n{traceback.format_exc()}"
+        logger.error(f"[ML] ERROR: Failed to load model: {e}\n{traceback.format_exc()}")
     
     _detector = detector
     return _detector

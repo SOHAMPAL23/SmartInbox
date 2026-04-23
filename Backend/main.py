@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 
+import sys
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.database import create_tables
@@ -103,8 +104,9 @@ async def lifespan(app: FastAPI):
         except Exception as warm_exc:
             logger.warning("ML warm-up skipped: %s", warm_exc)
     except Exception as exc:
+        import traceback
         logger.error(
-            "ML model failed to load: %s — predictions will be unavailable.", exc
+            "ML model failed to load: %s — predictions will be unavailable.\n%s", exc, traceback.format_exc()
         )
 
     # ── Background Workers ───────────────────────────────────────────────────

@@ -34,6 +34,7 @@ async def process_prediction_job(
     ml_service: Any
 ):
     """Background task for single message prediction."""
+    import traceback
     try:
         # Input Validation
         if not text or not text.strip():
@@ -44,13 +45,16 @@ async def process_prediction_job(
         
         from app.database import AsyncSessionLocal
         async with AsyncSessionLocal() as db:
+            # Ensure user is attached to this session
+            user = await db.merge(user)
+            
             # 1. ML Inference with timeout safety
             start_t = time.perf_counter()
             try:
                 ml_result = ml_service.predict(text)
             except Exception as ml_exc:
-                logger.error(f"ML Inference Error: {ml_exc}")
-                job_service.update_job(job_id, status=JobStatus.FAILED, error="Neural core execution error.")
+                logger.error(f"ML Inference Error: {ml_exc}\n{traceback.format_exc()}")
+                job_service.update_job(job_id, status=JobStatus.FAILED, error=f"Neural core execution error: {str(ml_exc)}")
                 return
 
             latency = (time.perf_counter() - start_t) * 1000
@@ -75,7 +79,7 @@ async def process_prediction_job(
                 result={"prediction_id": str(pred.id), "is_spam": pred.is_spam, "probability": pred.probability}
             )
     except Exception as e:
-        logger.error(f"Prediction job {job_id} failed: {e}")
+        logger.error(f"Prediction job {job_id} failed: {e}\n{traceback.format_exc()}")
         job_service.update_job(job_id, status=JobStatus.FAILED, error=str(e))
 
 async def process_batch_job(
@@ -86,6 +90,7 @@ async def process_batch_job(
     chunk_size: int = 50
 ):
     """Background task for high-throughput batch processing."""
+    import traceback
     try:
         job_service.update_job(job_id, status=JobStatus.PROCESSING, progress=5)
         
@@ -97,6 +102,10 @@ async def process_batch_job(
         
         async def process_chunk(chunk_texts, chunk_idx):
             async with AsyncSessionLocal() as db:
+                # Ensure user is attached to this session
+                nonlocal user
+                user = await db.merge(user)
+                
                 batch_res = ml_service.batch_predict(chunk_texts)
                 
                 # Store all in DB
@@ -155,7 +164,7 @@ async def process_batch_job(
         )
         
     except Exception as e:
-        logger.error(f"Batch job {job_id} failed: {e}")
+        logger.error(f"Batch job {job_id} failed: {e}\n{traceback.format_exc()}")
         job_service.update_job(job_id, status=JobStatus.FAILED, error=str(e))
 
 
