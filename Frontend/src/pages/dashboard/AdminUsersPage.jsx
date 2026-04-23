@@ -142,7 +142,7 @@ export const AdminUsersPage = () => {
     setSendingNotif(true);
     try {
       await sendAdminNotification({
-        user_id: notifyingUser.id,
+        userId: notifyingUser.id,
         ...notifContent
       });
       toast.success(`Security alert dispatched to ${notifyingUser.username}.`);
@@ -387,13 +387,13 @@ export const AdminUsersPage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedUser(null)}
-              className="absolute inset-0 bg-black/80 "
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
-              className="relative w-full max-w-4xl  p-10 rounded-[40px] border border-slate-200 shadow-[0_0_100px_rgba(0,0,0,0.5)] space-y-8"
+              className="relative w-full max-w-4xl bg-white p-10 rounded-[40px] border border-slate-200 shadow-xl space-y-8"
             >
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-5">
@@ -459,7 +459,7 @@ export const AdminUsersPage = () => {
                   </div>
                 </div>
 
-                <div className="h-[300px] w-full bg-white/[0.02] rounded-3xl p-6 border border-slate-100">
+                <div className="h-[300px] w-full bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
                   {loadingStats ? (
                     <div className="h-full flex items-center justify-center">
                       <div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
@@ -469,22 +469,22 @@ export const AdminUsersPage = () => {
                       <AreaChart data={userStats}>
                         <defs>
                           <linearGradient id="userSpam" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3}/>
+                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2}/>
                             <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
                           </linearGradient>
                           <linearGradient id="userHam" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                        <XAxis dataKey="date" stroke="rgba(255,255,255,0.2)" fontSize={9} tickLine={false} axisLine={false} />
-                        <YAxis stroke="rgba(255,255,255,0.2)" fontSize={9} tickLine={false} axisLine={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+                        <XAxis dataKey="date" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
                         <ChartTooltip 
-                          contentStyle={{ backgroundColor: "#020617", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "10px" }}
+                          contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", fontSize: "10px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                         />
                         <Area type="monotone" dataKey="spam" stroke="#f43f5e" fillOpacity={1} fill="url(#userSpam)" strokeWidth={2} />
-                        <Area type="monotone" dataKey="ham" stroke="#10b981" fillOpacity={1} fill="url(#userHam)" strokeWidth={2} />
+                        <Area type="monotone" dataKey="ham" stroke="#3b82f6" fillOpacity={1} fill="url(#userHam)" strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (

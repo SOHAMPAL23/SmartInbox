@@ -10,12 +10,22 @@ function App() {
         <Toaster
           position="top-right"
           toastOptions={{
-            duration: 3000,
+            duration: 3500,
             style: {
-              background: "#020617",
-              color: "#fff",
-              borderColor: "rgba(255,255,255,0.1)",
-              borderWidth: "1px",
+              background: "#FFFFFF",
+              color: "#1e293b",
+              border: "1px solid #e2e8f0",
+              borderRadius: "12px",
+              fontSize: "14px",
+              fontFamily: "Inter, sans-serif",
+              padding: "12px 16px",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+            },
+            success: {
+              iconTheme: { primary: "#16a34a", secondary: "#fff" },
+            },
+            error: {
+              iconTheme: { primary: "#dc2626", secondary: "#fff" },
             },
           }}
         />
