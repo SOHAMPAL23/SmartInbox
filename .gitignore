@@ -70,5 +70,5 @@ logs/
 *~
 .DS_Store
 Thumbs.db
-tools/
+# Removed tools/
 .env.example
