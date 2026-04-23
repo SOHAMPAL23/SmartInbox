@@ -248,3 +248,17 @@ async def health_check(request: Request):
             "version":        settings.APP_VERSION,
         },
     )
+
+# ── Redirect common frontend paths to Amplify ──────────────────────────────────
+# This ensures that visiting smartinbox-nopk.onrender.com/login sends you to the real app.
+@app.get("/{path:path}", tags=["General"], include_in_schema=False)
+async def redirect_to_frontend(path: str):
+    """Redirect non-API requests to the Amplify frontend."""
+    frontend_url = "https://main.d2tsa0g3cou3c1.amplifyapp.com"
+    # Don't redirect API paths or docs (they should have been caught by routers above)
+    if path.startswith(("api/", "docs", "redoc", "openapi.json")):
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
+    
+    return RedirectResponse(url=f"{frontend_url}/{path}")
+
+from fastapi.responses import RedirectResponse
