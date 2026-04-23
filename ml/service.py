@@ -152,15 +152,25 @@ class SpamDetectorService:
             with open(pipeline_path, "rb") as f:
                 self._pipeline = pickle.load(f)
             
-            # Fix scikit-learn version mismatch: newer versions of MaxAbsScaler (and others) 
+            # Fix scikit-learn version mismatch: newer versions of Scalers (and others) 
             # might have a 'clip' attribute that older versions don't expect.
-            if hasattr(self._pipeline, "scaler"):
-                scaler = self._pipeline.scaler
-                if hasattr(scaler, "clip") and not hasattr(scaler.__class__, "clip"):
-                    # The instance has 'clip' but the class doesn't (old version)
-                    # We can safely remove it from the instance __dict__
-                    logger.warning("[ML] Stripping unsupported 'clip' attribute from MaxAbsScaler for compatibility.")
-                    delattr(scaler, "clip")
+            def strip_clip(obj):
+                if hasattr(obj, "clip") and not hasattr(obj.__class__, "clip"):
+                    logger.warning(f"[ML] Stripping unsupported 'clip' from {type(obj).__name__}")
+                    try:
+                        delattr(obj, "clip")
+                    except:
+                        pass
+                
+                # Check nested attributes (like in a pipeline or custom wrapper)
+                if hasattr(obj, "__dict__"):
+                    for val in obj.__dict__.values():
+                        if isinstance(val, (list, tuple)):
+                            for item in val: strip_clip(item)
+                        else:
+                            strip_clip(val)
+
+            strip_clip(self._pipeline)
                     
         except Exception as pipe_exc:
             import traceback
