@@ -1,0 +1,90 @@
+{
+  "model_version": "v3",
+  "model_type": "RandomForestClassifier",
+  "trained_at": "2026-04-23T02:59:04.519700+00:00",
+  "completed_at": "2026-04-23T02:59:08.590032+00:00",
+  "seed": 42,
+  "uncertainty_margin": 0.08,
+  "optimal_threshold": 0.43,
+  "config": {
+    "n_estimators": 200,
+    "max_features": "sqrt",
+    "class_weight": "balanced",
+    "word_max_features": 5000,
+    "char_max_features": 3000,
+    "test_size": 0.2,
+    "cv_folds": 5
+  },
+  "dataset": {
+    "total_rows": 5118,
+    "train_size": 4094,
+    "test_size": 1024,
+    "spam_count": 653,
+    "ham_count": 4465
+  },
+  "test_metrics": {
+    "model_name": "Random Forest",
+    "train_accuracy": 0.9978,
+    "test_accuracy": 0.9814,
+    "accuracy_gap": 0.0164,
+    "train_f1": 0.9913,
+    "test_f1": 0.9249,
+    "f1_gap": 0.0664,
+    "overfitting_flag": true,
+    "roc_auc": 0.9862,
+    "pr_auc": 0.9648,
+    "precision": 0.959,
+    "recall": 0.8931,
+    "optimal_threshold": 0.43,
+    "optimal_f1": 0.9249,
+    "confusion_matrix": [
+      [
+        888,
+        5
+      ],
+      [
+        14,
+        117
+      ]
+    ],
+    "classification_report": {
+      "ham": {
+        "precision": 0.9844789356984479,
+        "recall": 0.9944008958566629,
+        "f1-score": 0.9894150417827298,
+        "support": 893.0
+      },
+      "spam": {
+        "precision": 0.9590163934426229,
+        "recall": 0.8931297709923665,
+        "f1-score": 0.924901185770751,
+        "support": 131.0
+      },
+      "accuracy": 0.9814453125,
+      "macro avg": {
+        "precision": 0.9717476645705354,
+        "recall": 0.9437653334245146,
+        "f1-score": 0.9571581137767404,
+        "support": 1024.0
+      },
+      "weighted avg": {
+        "precision": 0.9812215206247047,
+        "recall": 0.9814453125,
+        "f1-score": 0.9811618043436974,
+        "support": 1024.0
+      }
+    }
+  },
+  "cv_metrics": {
+    "cv_accuracy_mean": 0.9824,
+    "cv_accuracy_std": 0.0049,
+    "cv_f1_mean": 0.9289,
+    "cv_f1_std": 0.0198,
+    "cv_roc_auc_mean": 0.9909,
+    "cv_roc_auc_std": 0.005,
+    "cv_precision_mean": 0.9593,
+    "cv_precision_std": 0.0221,
+    "cv_recall_mean": 0.9004,
+    "cv_recall_std": 0.0206
+  }
+}

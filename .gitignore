@@ -52,7 +52,7 @@ pnpm-debug.log*
 data/
 ml/data/
 ml/models/
-ml/artifacts/
+!ml/artifacts/
 ml/logs/
 *.csv
 !sample_*.csv
@@ -72,3 +72,5 @@ logs/
 Thumbs.db
 # Removed tools/
 .env.example
+node_extracted/
+node.zip
