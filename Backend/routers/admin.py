@@ -200,7 +200,11 @@ async def admin_dashboard(
 ) -> GlobalAnalyticsResponse:
     """Alias to /analytics – returns the full dashboard stat set."""
     analytics = await get_global_analytics(db, days=days)
-    info       = ml.get_model_info()
+    
+    try:
+        info = ml.get_model_info()
+    except Exception as exc:
+        raise translate_ml_error(exc)
 
     return GlobalAnalyticsResponse(
         total_messages    = analytics["total_messages"],
@@ -513,7 +517,10 @@ async def get_metrics(db: DBSession, ml: MLService) -> MetricsResponse:
     summary="[Admin] Model card for the currently loaded model",
 )
 async def get_model_info(ml: MLService) -> ModelInfoResponse:
-    return ModelInfoResponse(**ml.get_model_info())
+    try:
+        return ModelInfoResponse(**ml.get_model_info())
+    except Exception as exc:
+        raise translate_ml_error(exc)
 
 
 # ── GET /admin/model-info/feature-importance ──────────────────────────────────
@@ -565,7 +572,11 @@ async def global_analytics(
     days:  Annotated[int, Query(ge=1, le=365)] = 30,
 ) -> GlobalAnalyticsResponse:
     analytics = await get_global_analytics(db, days=days)
-    info       = ml.get_model_info()
+    
+    try:
+        info = ml.get_model_info()
+    except Exception as exc:
+        raise translate_ml_error(exc)
 
     return GlobalAnalyticsResponse(
         total_messages    = analytics["total_messages"],

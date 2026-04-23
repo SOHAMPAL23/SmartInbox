@@ -238,6 +238,18 @@ async def health_check(request: Request):
 
     overall = "healthy" if (ml_health.get("status") == "healthy" and db_status == "ok") else "degraded"
 
+    import os
+    models_dir = Path(__file__).resolve().parents[1] / "ml" / "models"
+    artifacts_dir = Path(__file__).resolve().parents[1] / "ml" / "artifacts"
+    
+    file_info = {
+        "models_exists": models_dir.exists(),
+        "models_content": os.listdir(models_dir) if models_dir.exists() else [],
+        "artifacts_exists": artifacts_dir.exists(),
+        "artifacts_content": os.listdir(artifacts_dir) if artifacts_dir.exists() else [],
+        "cwd": os.getcwd()
+    }
+
     return JSONResponse(
         status_code=status.HTTP_200_OK if overall == "healthy" else status.HTTP_206_PARTIAL_CONTENT,
         content={
@@ -246,6 +258,7 @@ async def health_check(request: Request):
             "database":       db_status,
             "rate_limiting":  _rate_limit_available,
             "version":        settings.APP_VERSION,
+            "debug":          file_info
         },
     )
 
