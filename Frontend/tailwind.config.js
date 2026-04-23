@@ -1,26 +1,39 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-    content: [
-        "./index.html",
-        "./src/**/*.{js,ts,jsx,tsx}",
-    ],
-    theme: {
-        extend: {
-            animation: {
-                'fade-in': 'fadeIn 0.5s ease-out',
-                'slide-up': 'slideUp 0.5s ease-out',
-            },
-            keyframes: {
-                fadeIn: {
-                    '0%': { opacity: '0' },
-                    '100%': { opacity: '1' },
-                },
-                slideUp: {
-                    '0%': { transform: 'translateY(20px)', opacity: '0' },
-                    '100%': { transform: 'translateY(0)', opacity: '1' },
-                }
-            }
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+      },
+      colors: {
+        accent: {
+          DEFAULT: '#4A90E2',
+          light: '#EBF4FF',
+          dark: '#2563EB',
         },
+      },
+      borderRadius: {
+        DEFAULT: '12px',
+        lg: '16px',
+        xl: '20px',
+        '2xl': '24px',
+      },
+      transitionDuration: {
+        DEFAULT: '150ms',
+      },
+      animation: {
+        'fade-in': 'fade-in 0.2s ease-out both',
+        'spin-slow': 'spin 2s linear infinite',
+      },
+      boxShadow: {
+        soft: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+        card: '0 4px 12px rgba(0,0,0,0.06)',
+      },
     },
-    plugins: [],
-}
+  },
+  plugins: [],
+};
