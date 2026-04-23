@@ -43,32 +43,55 @@ def init_spam_detector() -> SpamDetectorService:
     Called once from app lifespan, not per-request.
     """
     global _detector
-    if _detector is None:
-        model_url = os.environ.get("MODEL_URL")
-        detector = SpamDetectorService(
-            model_version=settings.MODEL_VERSION,
-            auto_load=False, # We load manually to handle potential download
-        )
+    if _detector is not None:
+        return _detector
         
-        # Ensure model exists or download it
-        tag = settings.MODEL_VERSION
-        model_path = _ML_DIR / "models" / f"model_{tag}.pkl"
-        
-        if not model_path.exists() and model_url:
-            print(f"[ML] Model missing. Downloading from {model_url}...")
+    model_url = os.environ.get("MODEL_URL")
+    tag = os.environ.get("MODEL_VERSION", settings.MODEL_VERSION)
+    
+    print(f"[ML] Initializing detector version: {tag}")
+    
+    detector = SpamDetectorService(
+        model_version=tag,
+        auto_load=False,
+    )
+    
+    # Ensure model exists or download it
+    model_path = _ML_DIR / "models" / f"model_{tag}.pkl"
+    
+    if not model_path.exists():
+        if model_url:
+            # Handle Dropbox/Drive links by transforming them to direct download if possible
+            if "dropbox.com" in model_url and "dl=1" not in model_url:
+                model_url = model_url.replace("dl=0", "dl=1")
+                if "dl=1" not in model_url:
+                    model_url = model_url + ("&" if "?" in model_url else "?") + "dl=1"
+            
+            print(f"[ML] Model missing at {model_path}. Downloading from {model_url}...")
             try:
                 os.makedirs(model_path.parent, exist_ok=True)
-                response = requests.get(model_url, stream=True)
+                response = requests.get(model_url, stream=True, timeout=60)
                 response.raise_for_status()
                 with open(model_path, "wb") as f:
+                    size = 0
                     for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                print(f"[ML] Download complete: {model_path}")
+                        if chunk:
+                            f.write(chunk)
+                            size += len(chunk)
+                print(f"[ML] Download complete ({size} bytes): {model_path}")
             except Exception as e:
-                print(f"[ML] Download failed: {e}")
-        
+                print(f"[ML] CRITICAL: Download failed: {e}")
+        else:
+            print(f"[ML] WARNING: Model missing and no MODEL_URL provided.")
+
+    try:
         detector._load()
-        _detector = detector
+        print(f"[ML] Model {tag} loaded successfully.")
+    except Exception as e:
+        print(f"[ML] ERROR: Failed to load model: {e}")
+        # We still set the detector so health() can return 'not_loaded' instead of 503
+    
+    _detector = detector
     return _detector
 
 

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
+const API_URL = import.meta.env.VITE_API_URL || "https://smartinbox-nopk.onrender.com/api/v1";
 
 // ── Public client (no auth interceptor — for admin panel) ─────────────────────
 export const publicClient = axios.create({
