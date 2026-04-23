@@ -28,7 +28,13 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS:   int  = 7
     ML_DIR: Path         = Path(__file__).resolve().parents[2] / "ml"
     MODEL_VERSION: str   = "v1"
-    ALLOWED_ORIGINS: List[str] = ["*"] # default to wildcard for Amplify flexibility, refine via env var
+    ALLOWED_ORIGINS: List[str] = [
+        "https://main.d2tsa0g3cou3c1.amplifyapp.com",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:3000",
+    ]
 
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE:     int = 100
