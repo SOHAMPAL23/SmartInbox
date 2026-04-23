@@ -4,7 +4,7 @@ import { Bell, ShieldAlert, Info, Check, X } from "lucide-react";
 import { axiosClient, getAccessToken } from "../../api/axiosClient";
 
 const POLL_INTERVAL = 15_000; // 15s fallback polling
-const WS_BASE = import.meta.env.VITE_WS_URL || "ws://localhost:8000/api/v1";
+const WS_BASE = import.meta.env.VITE_WS_URL || "wss://smartinbox-nopk.onrender.com/api/v1";
 
 export const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);

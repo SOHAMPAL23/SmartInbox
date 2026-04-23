@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int  = 60 
     REFRESH_TOKEN_EXPIRE_DAYS:   int  = 7
     ML_DIR: Path         = Path(__file__).resolve().parents[2] / "ml"
-    MODEL_VERSION: str   = "v1"
+    MODEL_VERSION: str   = "v3"
     ALLOWED_ORIGINS: List[str] = [
         "https://main.d2tsa0g3cou3c1.amplifyapp.com",
         "http://localhost:5173",
