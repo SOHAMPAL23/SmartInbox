@@ -1,25 +1,14 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useStore } from "../store/useStore";
 import { Spinner } from "./ui/Spinner";
 
-/**
- * PublicOnlyRoute
- * ---------------
- * Wraps public pages (/, /login) so that already-authenticated users
- * are automatically bounced into the app instead of seeing the public page.
- *
- * - isLoading      → show spinner (auth state not yet resolved)
- * - admin user     → /admin
- * - regular user   → /dashboard
- * - unauthenticated → render children (show the public page)
- */
 export const PublicOnlyRoute = ({ children }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useStore();
 
   if (isLoading) {
     return (
-      <div className="flex bg-[#060b13] h-screen w-screen items-center justify-center">
-        <Spinner size={48} className="text-cyan-500" />
+      <div className="flex bg-slate-50 h-screen w-screen items-center justify-center">
+        <Spinner size={32} className="text-indigo-600" />
       </div>
     );
   }

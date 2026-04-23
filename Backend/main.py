@@ -19,7 +19,7 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.database import create_tables
 from app.middleware import GlobalExceptionMiddleware, RequestLoggingMiddleware
-from app.routers import admin, auth, user, notifications, ws
+from app.routers import admin, auth, user, notifications, ws, jobs
 from app.services.ml_service import init_spam_detector
 
 settings = get_settings()
@@ -60,24 +60,30 @@ async def lifespan(app: FastAPI):
 
     # ── Database Connectivity Check ───────────────────────────────────────────
     try:
-        from urllib.parse import urlparse
-        import socket
+        from app.database import AsyncSessionLocal
+        from sqlalchemy import text
+        import asyncio
         
-        db_url = settings.DATABASE_URL
-        parsed = urlparse(db_url)
-        host = parsed.hostname
+        connected = False
+        retries = 5
+        while not connected and retries > 0:
+            try:
+                async with AsyncSessionLocal() as session:
+                    await session.execute(text("SELECT 1"))
+                connected = True
+                logger.info("Database connectivity verified. [Neon/Serverless Postgres]")
+            except Exception as e:
+                retries -= 1
+                logger.warning(f"Database connection failed. Retrying in 2s... ({retries} retries left)")
+                await asyncio.sleep(2)
         
-        if host:
-            logger.info("Verifying DNS resolution for host: %s", host)
-            socket.gethostbyname(host)
-            
-        await create_tables()
-        logger.info("Database tables verified / created. [SMS, User, Prediction, Notification, etc.]")
-    except socket.gaierror:
-        logger.error("DNS Resolution Failed: Could not resolve database host '%s'. Check internet/DNS settings.", host)
+        if not connected:
+            logger.error("Failed to connect to database after multiple retries. API may be degraded.")
+        else:
+            await create_tables()
+            logger.info("Database schema verified / created.")
     except Exception as exc:
-        logger.error("Failed to create database tables: %s", exc)
-        # Don't crash — DB might not be available in CI/test environments
+        logger.error("Error during database initialization: %s", exc)
 
 
     # ── Load ML model into memory ─────────────────────────────────────────────
@@ -100,6 +106,15 @@ async def lifespan(app: FastAPI):
         logger.error(
             "ML model failed to load: %s — predictions will be unavailable.", exc
         )
+
+    # ── Background Workers ───────────────────────────────────────────────────
+    try:
+        import asyncio
+        from app.services.precompute_worker import precompute_analytics_loop
+        asyncio.create_task(precompute_analytics_loop())
+        logger.info("Precompute Analytics Worker started in background.")
+    except Exception as e:
+        logger.error(f"Failed to start precompute worker: {e}")
 
     logger.info("═══ SmartInbox API ready ═══")
     yield
@@ -167,6 +182,7 @@ app.include_router(user.router,          prefix="/api/v1")
 app.include_router(admin.router,         prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(ws.router,            prefix="/api/v1")
+app.include_router(jobs.router,          prefix="/api/v1")
 
 
 # ── Root & health endpoints ───────────────────────────────────────────────────

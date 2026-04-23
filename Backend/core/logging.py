@@ -27,16 +27,34 @@ def configure_logging() -> None:
     level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
     # ── Formatter ────────────────────────────────────────────────────────────
-    fmt = (
-        "%(asctime)s | %(levelname)-8s | %(name)-24s | "
-        "%(filename)s:%(lineno)d | %(message)s"
-    )
-    formatter = logging.Formatter(fmt=fmt, datefmt="%Y-%m-%d %H:%M:%S")
+    if settings.ENVIRONMENT == "production":
+        # Structured JSON logging for production
+        class JsonFormatter(logging.Formatter):
+            def format(self, record):
+                import json
+                log_record = {
+                    "timestamp": self.formatTime(record, self.datefmt),
+                    "level": record.levelname,
+                    "logger": record.name,
+                    "message": record.getMessage(),
+                    "module": record.module,
+                    "line": record.lineno,
+                }
+                if record.exc_info:
+                    log_record["exception"] = self.formatException(record.exc_info)
+                return json.dumps(log_record)
+        
+        formatter = JsonFormatter(datefmt="%Y-%m-%dT%H:%M:%SZ")
+    else:
+        # Standard human-readable logging for development
+        fmt = (
+            "%(asctime)s | %(levelname)-8s | %(name)-24s | "
+            "%(filename)s:%(lineno)d | %(message)s"
+        )
+        formatter = logging.Formatter(fmt=fmt, datefmt="%Y-%m-%d %H:%M:%S")
 
     # ── Console handler ───────────────────────────────────────────────────────
-    import io
-    stdout_utf8 = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace") if hasattr(sys.stdout, "buffer") else sys.stdout
-    console_handler = logging.StreamHandler(stdout_utf8)
+    console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     console_handler.setLevel(level)
 

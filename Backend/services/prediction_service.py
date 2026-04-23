@@ -12,19 +12,6 @@ import time
 from typing import Any, AsyncIterator, Dict, List, Optional
 import uuid
 
-# Global in-memory cache for analytical results
-_ANALYTICS_CACHE: Dict[str, Any] = {}
-_CACHE_TTL = 60  # seconds
-
-def get_cached(key: str) -> Optional[Any]:
-    entry = _ANALYTICS_CACHE.get(key)
-    if entry and (time.time() - entry['ts'] < _CACHE_TTL):
-        return entry['data']
-    return None
-
-def set_cached(key: str, data: Any):
-    _ANALYTICS_CACHE[key] = {'data': data, 'ts': time.time()}
-
 from sqlalchemy import Integer, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,22 +20,143 @@ from app.models.prediction import Prediction
 from app.models.sms_message import SMSMessage
 from app.models.user import User
 from app.schemas.prediction import HistoryItem, HistoryResponse, TrendPoint, SpamTrendsResponse
+from app.services.cache_service import cache_manager
+from app.services.job_service import job_service, JobStatus
+import asyncio
 
 logger = get_logger("prediction_service")
 
-# ── Simple In-Memory Cache ───────────────────────────────────────────────────
-_cache = {}
-CACHE_TTL = 30  # 30 seconds
 
-def get_cached(key: str) -> Optional[Any]:
-    if key in _cache:
-        val, ts = _cache[key]
-        if (datetime.now() - ts).total_seconds() < CACHE_TTL:
-            return val
-    return None
+async def process_prediction_job(
+    job_id: str,
+    user: User,
+    text: str,
+    ml_service: Any
+):
+    """Background task for single message prediction."""
+    try:
+        # Input Validation
+        if not text or not text.strip():
+            job_service.update_job(job_id, status=JobStatus.FAILED, error="Empty input payload.")
+            return
 
-def set_cached(key: str, value: Any):
-    _cache[key] = (value, datetime.now())
+        job_service.update_job(job_id, status=JobStatus.PROCESSING, progress=10)
+        
+        from app.database import AsyncSessionLocal
+        async with AsyncSessionLocal() as db:
+            # 1. ML Inference with timeout safety
+            start_t = time.perf_counter()
+            try:
+                ml_result = ml_service.predict(text)
+            except Exception as ml_exc:
+                logger.error(f"ML Inference Error: {ml_exc}")
+                job_service.update_job(job_id, status=JobStatus.FAILED, error="Neural core execution error.")
+                return
+
+            latency = (time.perf_counter() - start_t) * 1000
+            
+            job_service.update_job(job_id, progress=50)
+            
+            # 2. Store in DB
+            pred = await store_prediction(
+                db=db,
+                user=user,
+                text=text,
+                ml_result=ml_result,
+                latency_ms=latency,
+                model_version=ml_service._model_version
+            )
+            await db.commit()
+            
+            job_service.update_job(
+                job_id, 
+                status=JobStatus.COMPLETED, 
+                progress=100, 
+                result={"prediction_id": str(pred.id), "is_spam": pred.is_spam, "probability": pred.probability}
+            )
+    except Exception as e:
+        logger.error(f"Prediction job {job_id} failed: {e}")
+        job_service.update_job(job_id, status=JobStatus.FAILED, error=str(e))
+
+async def process_batch_job(
+    job_id: str,
+    user: User,
+    texts: List[str],
+    ml_service: Any,
+    chunk_size: int = 50
+):
+    """Background task for high-throughput batch processing."""
+    try:
+        job_service.update_job(job_id, status=JobStatus.PROCESSING, progress=5)
+        
+        # Split into chunks
+        chunks = [texts[i:i + chunk_size] for i in range(0, len(texts), chunk_size)]
+        total_chunks = len(chunks)
+        
+        from app.database import AsyncSessionLocal
+        
+        async def process_chunk(chunk_texts, chunk_idx):
+            async with AsyncSessionLocal() as db:
+                batch_res = ml_service.batch_predict(chunk_texts)
+                
+                # Store all in DB
+                for i, text in enumerate(chunk_texts):
+                    ml_data = batch_res[i]
+                    await store_prediction(
+                        db=db,
+                        user=user,
+                        text=text,
+                        ml_result=ml_data,
+                        latency_ms=ml_data.get("_latency_ms", 0.0),
+                        model_version=ml_service._model_version
+                    )
+                await db.commit()
+                
+                # Update progress
+                current_prog = int(5 + (chunk_idx + 1) / total_chunks * 90)
+                job_service.update_job(job_id, progress=current_prog)
+                return batch_res
+
+        # Execute chunks in parallel (limited concurrency for DB sanity)
+        semaphore = asyncio.Semaphore(5)
+        async def sem_process(c, idx):
+            async with semaphore:
+                return await process_chunk(c, idx)
+
+        tasks = [sem_process(chunk, i) for i, chunk in enumerate(chunks)]
+        all_res = await asyncio.gather(*tasks)
+        
+        # Flatten results
+        flattened = [item for sublist in all_res for item in sublist]
+        
+        # Calculate summary stats
+        spam_count = sum(1 for r in flattened if r.get("prediction") == 1)
+        ham_count = len(flattened) - spam_count
+        
+        job_service.update_job(
+            job_id, 
+            status=JobStatus.COMPLETED, 
+            progress=100, 
+            result={
+                "processed": len(flattened),
+                "spam_count": spam_count,
+                "ham_count": ham_count,
+                "items": [
+                    {
+                        "row": i + 1,
+                        "message": texts[i],
+                        "verdict": "SPAM" if r["prediction"] == 1 else "HAM",
+                        "probability": r["probability"]
+                    }
+                    for i, r in enumerate(flattened)
+                ],
+                "summary": f"Processed {len(flattened)} messages ({spam_count} spam, {ham_count} ham)."
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Batch job {job_id} failed: {e}")
+        job_service.update_job(job_id, status=JobStatus.FAILED, error=str(e))
 
 
 async def store_prediction(
@@ -162,7 +270,7 @@ async def get_user_spam_trends_by_id(
 ) -> SpamTrendsResponse:
     """Return daily counts for a specific user ID."""
     cache_key = f"trends_{user_id}_{days}"
-    cached = get_cached(cache_key)
+    cached = cache_manager.get(cache_key)
     if cached: return cached
 
     since = datetime.now(timezone.utc) - timedelta(days=days)
@@ -189,7 +297,7 @@ async def get_user_spam_trends_by_id(
         for row in rows
     ]
     res = SpamTrendsResponse(period=f"last_{days}_days", points=points)
-    set_cached(cache_key, res)
+    cache_manager.set(cache_key, res)
     return res
 
 
@@ -203,7 +311,7 @@ async def get_spam_trends(
     """
     # Cache check
     cache_key = f"trends_{user.id}_{days}"
-    cached = get_cached(cache_key)
+    cached = cache_manager.get(cache_key)
     if cached: return cached
 
     since = datetime.now(timezone.utc) - timedelta(days=days)
@@ -232,7 +340,7 @@ async def get_spam_trends(
         for row in rows
     ]
     res = SpamTrendsResponse(period=f"last_{days}_days", points=points)
-    set_cached(cache_key, res)
+    cache_manager.set(cache_key, res)
     return res
 
 async def get_user_stats(
@@ -244,7 +352,7 @@ async def get_user_stats(
     """
     # Cache check
     cache_key = f"stats_{user.id}"
-    cached = get_cached(cache_key)
+    cached = cache_manager.get(cache_key)
     if cached: return cached
 
     # Run queries in parallel
@@ -291,7 +399,7 @@ async def get_user_stats(
             "spam":  f"+{spam_24h}" if spam_24h > 0 else "0",
         }
     }
-    set_cached(cache_key, data)
+    cache_manager.set(cache_key, data)
     return data
 
 
@@ -307,7 +415,7 @@ async def get_global_analytics(
     """
     # Cache check
     cache_key = f"global_analytics_{days}"
-    cached = get_cached(cache_key)
+    cached = cache_manager.get(cache_key)
     if cached: return cached
 
     since = datetime.now(timezone.utc) - timedelta(days=days)
@@ -362,7 +470,7 @@ async def get_global_analytics(
         "active_users":    active_users,
         "recent_activity": recent_activity,
     }
-    set_cached(cache_key, data)
+    cache_manager.set(cache_key, data)
     return data
 
 

@@ -11,14 +11,17 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-# ── Engine (connection pool tuned for production) ────────────────────────────
+# ── Engine (connection pool tuned for Neon / Serverless Postgres) ─────────────
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,           # log SQL only in debug mode
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,            # detect stale connections
-    pool_recycle=3600,             # recycle connections every hour
+    echo=settings.DEBUG,
+    pool_size=settings.DATABASE_POOL_SIZE,
+    max_overflow=settings.DATABASE_MAX_OVERFLOW,
+    pool_pre_ping=True,            # essential for handling Neon cold starts/idle timeouts
+    pool_recycle=600,              # recycle faster for serverless environments (10 min)
+    connect_args={
+        "command_timeout": 30,     # fail fast on long-running connections
+    }
 )
 
 # ── Session factory ───────────────────────────────────────────────────────────

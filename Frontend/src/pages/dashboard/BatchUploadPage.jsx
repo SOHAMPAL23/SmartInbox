@@ -104,10 +104,10 @@ export const BatchUploadPage = () => {
           // Here we'll just show the completion toast and allow user to see history
           setResults({ 
             total_rows: job.result.processed, 
-            spam_count: "SYNCED", 
-            ham_count: "SYNCED", 
-            uncertain_count: 0, 
-            results: [] 
+            spam_count: job.result.spam_count, 
+            ham_count: job.result.ham_count, 
+            uncertain_count: job.result.uncertain_count || 0, 
+            results: job.result.items || [] 
           });
         } else if (job.status === "failed") {
           clearInterval(pollInterval);

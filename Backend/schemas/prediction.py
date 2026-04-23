@@ -11,6 +11,12 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
+class JobResponse(BaseModel):
+    job_id: str
+    status: str
+    message: str = "Job queued for background processing."
+
+
 # ── Requests ──────────────────────────────────────────────────────────────────
 
 class PredictRequest(BaseModel):

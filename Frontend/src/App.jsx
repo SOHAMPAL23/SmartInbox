@@ -1,12 +1,31 @@
+import React, { useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
 import { AppRoutes } from "./routes/AppRoutes";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
+import { useStore } from "./store/useStore";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function App() {
+  const initAuth = useStore((state) => state.initAuth);
+
+  React.useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
   return (
-    <BrowserRouter>
-      <AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <Toaster
           position="top-right"
           toastOptions={{
@@ -30,8 +49,8 @@ function App() {
           }}
         />
         <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

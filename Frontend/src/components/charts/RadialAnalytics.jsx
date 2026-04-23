@@ -1,14 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
-export const RadialAnalytics = ({ percentage, label, color = "#06b6d4" }) => {
+export const RadialAnalytics = ({ percentage, label, color = "#4f46e5" }) => {
   const svgRef = useRef();
 
   useEffect(() => {
-    const width = 150;
-    const height = 150;
+    d3.select(svgRef.current).selectAll("*").remove();
+
+    const width = 140;
+    const height = 140;
     const radius = Math.min(width, height) / 2;
-    const innerRadius = radius * 0.7;
+    const innerRadius = radius * 0.75;
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -20,12 +22,12 @@ export const RadialAnalytics = ({ percentage, label, color = "#06b6d4" }) => {
       .innerRadius(innerRadius)
       .outerRadius(radius)
       .startAngle(0)
-      .cornerRadius(10);
+      .cornerRadius(8);
 
     // Background track
     svg.append("path")
       .datum({ endAngle: 2 * Math.PI })
-      .style("fill", "rgba(255,255,255,0.05)")
+      .style("fill", "#f1f5f9")
       .attr("d", arc);
 
     // Progress arc
@@ -35,7 +37,7 @@ export const RadialAnalytics = ({ percentage, label, color = "#06b6d4" }) => {
       .attr("d", arc);
 
     foreground.transition()
-      .duration(1500)
+      .duration(1200)
       .ease(d3.easeCubicOut)
       .attrTween("d", (d) => {
         const interpolate = d3.interpolate(d.endAngle, (percentage / 100) * 2 * Math.PI);
@@ -45,19 +47,20 @@ export const RadialAnalytics = ({ percentage, label, color = "#06b6d4" }) => {
         };
       });
 
-    // Label
+    // Percentage Text
     svg.append("text")
       .attr("text-anchor", "middle")
-      .attr("dy", ".35em")
-      .style("fill", "#fff")
+      .attr("dy", "0.35em")
+      .style("fill", "#0f172a")
       .style("font-size", "1.5rem")
-      .style("font-weight", "bold")
+      .style("font-weight", "900")
+      .style("font-family", "Inter, sans-serif")
       .text(`${percentage}%`);
 
   }, [percentage, color]);
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
+    <div className="flex flex-col items-center justify-center">
       <svg ref={svgRef}></svg>
       <span className="mt-2 text-slate-500 text-sm font-medium uppercase tracking-wider">{label}</span>
     </div>

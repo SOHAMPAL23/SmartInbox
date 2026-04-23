@@ -18,9 +18,9 @@ class Settings(BaseSettings):
     HOST: str  = "0.0.0.0"
     PORT: int  = 8000
 
-    DATABASE_URL: str = (
-        "sqlite+aiosqlite:///./smartinbox.db"
-    )
+    DATABASE_URL: str = "sqlite+aiosqlite:///./smartinbox.db"
+    DATABASE_POOL_SIZE: int = 5
+    DATABASE_MAX_OVERFLOW: int = 10
 
     SECRET_KEY: str       = "CHANGE_ME_IN_PRODUCTION_USE_32_CHAR_RANDOM_STRING"
     ALGORITHM: str        = "HS256"
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS:   int  = 7
     ML_DIR: Path         = Path(__file__).resolve().parents[2] / "ml"
     MODEL_VERSION: str   = "v1"
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    ALLOWED_ORIGINS: List[str] = ["*"] # default to wildcard for Amplify flexibility, refine via env var
 
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE:     int = 100

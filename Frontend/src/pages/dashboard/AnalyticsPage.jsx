@@ -1,50 +1,53 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { motion } from "framer-motion";
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from "recharts";
-import { 
-  Activity, 
-  TrendingUp, 
-  ShieldAlert, 
-  Zap, 
+import {
+  Activity,
+  TrendingUp,
+  ShieldAlert,
+  Zap,
   RefreshCw,
-  Sparkles
 } from "lucide-react";
+import { useStore } from "../../store/useStore";
 import { getSpamTrends, getUserStats } from "../../api/spamApi";
 import { toast } from "react-hot-toast";
 
 export const AnalyticsPage = () => {
-  const [trends, setTrends] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [lookback, setLookback] = useState(7);
+  const storeTrends = useStore((state) => state.trends);
+  const storeStats = useStore((state) => state.stats);
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [lookback]);
+  const [trends, setTrends] = useState(storeTrends.map(p => ({
+    label: p.date,
+    value: p.total
+  })));
+  const [stats, setStats] = useState(storeStats);
+  const [loading, setLoading] = useState(!storeStats || storeTrends.length === 0);
+  const [lookback, setLookback] = useState(30);
 
-  const fetchAnalytics = async () => {
-    setLoading(true);
+  const fetchAnalytics = useCallback(async () => {
     try {
       const [trendData, statData] = await Promise.all([
         getSpamTrends(lookback),
         getUserStats()
       ]);
-      setTrends(trendData.points || []);
+      setTrends((trendData.points || []).map(p => ({
+        label: p.date,
+        value: p.total
+      })));
       setStats(statData);
     } catch (err) {
       toast.error("Failed to load analytics.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [lookback]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   const cardVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -52,7 +55,7 @@ export const AnalyticsPage = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -61,7 +64,7 @@ export const AnalyticsPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-md text-[10px] font-semibold tracking-wider uppercase text-blue-700"
@@ -93,7 +96,7 @@ export const AnalyticsPage = () => {
               </button>
             ))}
           </div>
-          <button 
+          <button
             onClick={fetchAnalytics}
             className="p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all shadow-sm"
           >
@@ -104,7 +107,7 @@ export const AnalyticsPage = () => {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Detection Velocity */}
         <motion.div variants={cardVariants} className="lg:col-span-2 minimal-card p-6">
           <div className="flex justify-between items-start mb-8">
@@ -117,7 +120,7 @@ export const AnalyticsPage = () => {
             </div>
             <Sparkles className="text-blue-500 w-4 h-4" />
           </div>
-          
+
           <div className="h-[300px] w-full">
             {loading ? (
               <div className="h-full flex items-center justify-center">
@@ -128,20 +131,20 @@ export const AnalyticsPage = () => {
                 <AreaChart data={trends} margin={{ left: -20 }}>
                   <defs>
                     <linearGradient id="colorSpam" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorHam" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#64748b" 
-                    fontSize={11} 
-                    tickLine={false} 
+                  <XAxis
+                    dataKey="date"
+                    stroke="#64748b"
+                    fontSize={11}
+                    tickLine={false}
                     axisLine={false}
                     tickMargin={10}
                     tickFormatter={(str) => {
@@ -150,7 +153,7 @@ export const AnalyticsPage = () => {
                     }}
                   />
                   <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickMargin={10} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                     itemStyle={{ color: "#0f172a", fontWeight: 500 }}
                   />
@@ -160,112 +163,113 @@ export const AnalyticsPage = () => {
               </ResponsiveContainer>
             )}
           </div>
-        </motion.div>
-
-        {/* Threat Distribution */}
-        <motion.div variants={cardVariants} className="minimal-card p-6 flex flex-col">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-              <ShieldAlert className="text-slate-400 w-5 h-5" />
-              Threat Matrix
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">Composition Analysis</p>
-          </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center">
-            {loading ? (
-               <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-            ) : stats ? (
-              <>
-                <div className="h-[200px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: "Spam", value: stats.spam_blocked },
-                          { name: "Clean", value: stats.total_scanned - stats.spam_blocked }
-                        ]}
-                        innerRadius={50}
-                        outerRadius={70}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        <Cell fill="#f43f5e" />
-                        <Cell fill="#3b82f6" />
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "12px" }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="grid grid-cols-2 gap-4 w-full mt-6">
-                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-center">
-                    <p className="text-[10px] font-semibold text-slate-500 uppercase mb-1">Spam Ratio</p>
-                    <p className="text-xl font-bold text-slate-900">
-                      {stats.total_scanned > 0 ? ((stats.spam_blocked / stats.total_scanned) * 100).toFixed(1) : 0}%
-                    </p>
-                  </div>
-                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-center">
-                    <p className="text-[10px] font-semibold text-slate-500 uppercase mb-1">Status</p>
-                    <p className={`text-xl font-bold ${stats.threat_level === "High" ? "text-rose-600" : stats.threat_level === "Medium" ? "text-amber-600" : "text-emerald-600"}`}>
-                      {stats.threat_level}
-                    </p>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No telemetry data</p>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Intelligence Insights */}
-        <motion.div variants={cardVariants} className="lg:col-span-3 minimal-card p-6">
-           <div className="flex items-center gap-3 mb-6">
-             <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
-               <Zap className="text-blue-600 w-5 h-5" />
-             </div>
-             <div>
-               <h2 className="text-base font-semibold text-slate-900">Neural Insights</h2>
-               <p className="text-xs text-slate-500">Model Performance Telemetry</p>
-             </div>
-           </div>
-
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-slate-600">Inference Latency</span>
-                  <span className="text-slate-900">24ms avg</span>
-                </div>
-                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: "85%" }} className="h-full bg-blue-500 rounded-full" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-slate-600">Model Confidence</span>
-                  <span className="text-slate-900">98.2%</span>
-                </div>
-                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: "98%" }} className="h-full bg-purple-500 rounded-full" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-slate-600">Resource Utilization</span>
-                  <span className="text-slate-900">Optimal</span>
-                </div>
-                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: "45%" }} className="h-full bg-emerald-500 rounded-full" />
-                </div>
-              </div>
-           </div>
-        </motion.div>
-
       </div>
-    </motion.div>
+
+      {/* Threat Distribution */}
+      <motion.div variants={cardVariants} className="minimal-card p-6 flex flex-col">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+            <ShieldAlert className="text-slate-400 w-5 h-5" />
+            Threat Matrix
+          </h2>
+          <p className="text-xs text-slate-500 mt-1">Composition Analysis</p>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center">
+          {loading ? (
+            <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+          ) : stats ? (
+            <>
+              <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Spam", value: stats.spam_blocked },
+                        { name: "Clean", value: stats.total_scanned - stats.spam_blocked }
+                      ]}
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      <Cell fill="#f43f5e" />
+                      <Cell fill="#3b82f6" />
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "12px" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 gap-4 w-full mt-6">
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-center">
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase mb-1">Spam Ratio</p>
+                  <p className="text-xl font-bold text-slate-900">
+                    {stats.total_scanned > 0 ? ((stats.spam_blocked / stats.total_scanned) * 100).toFixed(1) : 0}%
+                  </p>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-center">
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase mb-1">Status</p>
+                  <p className={`text-xl font-bold ${stats.threat_level === "High" ? "text-rose-600" : stats.threat_level === "Medium" ? "text-amber-600" : "text-emerald-600"}`}>
+                    {stats.threat_level}
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500 italic">No telemetry data</p>
+          )}
+        </div>
+      </div>
+
+      {/* Intelligence Insights */}
+      <motion.div variants={cardVariants} className="lg:col-span-3 minimal-card p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
+            <Zap className="text-blue-600 w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-slate-900">Neural Insights</h2>
+            <p className="text-xs text-slate-500">Model Performance Telemetry</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold">
+              <span className="text-slate-600">Inference Latency</span>
+              <span className="text-slate-900">24ms avg</span>
+            </div>
+            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <motion.div initial={{ width: 0 }} animate={{ width: "85%" }} className="h-full bg-blue-500 rounded-full" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold">
+              <span className="text-slate-600">Model Confidence</span>
+              <span className="text-slate-900">98.2%</span>
+            </div>
+            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <motion.div initial={{ width: 0 }} animate={{ width: "98%" }} className="h-full bg-purple-500 rounded-full" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold">
+              <span className="text-slate-600">Resource Utilization</span>
+              <span className="text-slate-900">Optimal</span>
+            </div>
+            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <motion.div initial={{ width: 0 }} animate={{ width: "45%" }} className="h-full bg-emerald-500 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+    </div>
+    </div >
   );
 };
+
