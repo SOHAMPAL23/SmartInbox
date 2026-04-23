@@ -151,6 +151,17 @@ class SpamDetectorService:
         try:
             with open(pipeline_path, "rb") as f:
                 self._pipeline = pickle.load(f)
+            
+            # Fix scikit-learn version mismatch: newer versions of MaxAbsScaler (and others) 
+            # might have a 'clip' attribute that older versions don't expect.
+            if hasattr(self._pipeline, "scaler"):
+                scaler = self._pipeline.scaler
+                if hasattr(scaler, "clip") and not hasattr(scaler.__class__, "clip"):
+                    # The instance has 'clip' but the class doesn't (old version)
+                    # We can safely remove it from the instance __dict__
+                    logger.warning("[ML] Stripping unsupported 'clip' attribute from MaxAbsScaler for compatibility.")
+                    delattr(scaler, "clip")
+                    
         except Exception as pipe_exc:
             import traceback
             logger.error(f"[ML-DEBUG] Pipeline load failed: {pipe_exc}\n{traceback.format_exc()}")
