@@ -239,8 +239,9 @@ async def health_check(request: Request):
     overall = "healthy" if (ml_health.get("status") == "healthy" and db_status == "ok") else "degraded"
 
     import os
-    models_dir = Path(__file__).resolve().parents[2] / "ml" / "models"
-    artifacts_dir = Path(__file__).resolve().parents[2] / "ml" / "artifacts"
+    root_dir = Path(__file__).resolve().parent.parent
+    models_dir = root_dir / "ml" / "models"
+    artifacts_dir = root_dir / "ml" / "artifacts"
     
     file_info = {
         "models_exists": models_dir.exists(),
