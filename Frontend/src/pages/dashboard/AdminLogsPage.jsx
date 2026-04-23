@@ -108,7 +108,7 @@ export const AdminLogsPage = () => {
       </div>
 
       {/* Terminal Container */}
-      <div className=" rounded-3xl border border-slate-200 shadow-md overflow-hidden bg-black/40">
+      <div className=" rounded-3xl border border-slate-200 shadow-sm overflow-hidden bg-white">
         <div className="flex items-center justify-between px-8 py-4 bg-slate-50 border-b border-slate-100">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
@@ -142,7 +142,7 @@ export const AdminLogsPage = () => {
                         [{format(new Date(log.timestamp), "HH:mm:ss.SS")}]
                       </div>
                       <div className="col-span-2">
-                        <span className={`text-${actionCfg.color}-400 font-black`}>
+                        <span className={`text-${actionCfg.color}-600 font-black`}>
                           {actionCfg.label}
                         </span>
                       </div>

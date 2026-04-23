@@ -118,47 +118,47 @@ export const NotificationBell = () => {
             {/* Backdrop */}
             <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
-            <motion.div
-              initial={{ opacity: 0, y: 6, scale: 0.97 }}
+              <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 6, scale: 0.97 }}
-              transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full mt-2 w-80 bg-white border border-slate-200
-                         rounded-2xl shadow-card z-50 overflow-hidden"
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="absolute right-0 top-full mt-3 w-[340px] bg-white/95 backdrop-blur-xl border border-slate-200/60
+                         rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100/50 bg-slate-50/50">
                 <div className="flex items-center gap-2">
-                  <Bell size={13} className="text-slate-500" />
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  <Bell size={14} className="text-slate-500" />
+                  <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-widest">
                     Notifications
                   </h4>
                   {unreadCount > 0 && (
-                    <span className="badge-red text-[10px]">{unreadCount} new</span>
+                    <span className="bg-rose-500 text-white px-2 py-0.5 rounded-full text-[9px] font-bold shadow-sm">{unreadCount} new</span>
                   )}
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-1 rounded hover:bg-slate-200 transition-colors">
-                  <X size={13} className="text-slate-400" />
+                <button onClick={() => setIsOpen(false)} className="p-1.5 rounded-xl hover:bg-slate-200/50 transition-colors">
+                  <X size={14} className="text-slate-400" />
                 </button>
               </div>
 
               {/* List */}
-              <div className="max-h-[360px] overflow-y-auto no-scrollbar divide-y divide-slate-100">
+              <div className="max-h-[380px] overflow-y-auto custom-scrollbar divide-y divide-slate-100/50">
                 {notifications.length > 0 ? notifications.map((n) => (
-                  <div
+                    <div
                     key={n.id}
-                    className={`flex gap-3 p-4 group transition-colors
-                      ${!n.is_read ? "bg-blue-50/60" : "hover:bg-slate-50"}`}
+                    className={`flex gap-4 p-5 group transition-all duration-200
+                      ${!n.is_read ? "bg-blue-50/40" : "hover:bg-slate-50/80"}`}
                   >
-                    <div className={`flex-shrink-0 p-1.5 rounded-lg mt-0.5
-                      ${n.type === "security" ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"}`}
+                    <div className={`flex-shrink-0 p-2 rounded-xl mt-0.5 shadow-sm
+                      ${n.type === "security" ? "bg-rose-100 text-rose-500" : "bg-blue-100 text-blue-500"}`}
                     >
-                      {n.type === "security" ? <ShieldAlert size={14} /> : <Info size={14} />}
+                      {n.type === "security" ? <ShieldAlert size={16} /> : <Info size={16} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-800 truncate">{n.title}</p>
-                      <p className="text-[11px] text-slate-500 leading-relaxed mt-0.5 line-clamp-2">{n.message}</p>
-                      <p className="text-[10px] text-slate-400 mt-1">
+                      <p className="text-[13px] font-bold text-slate-800 truncate">{n.title}</p>
+                      <p className="text-[12px] text-slate-500 leading-relaxed mt-1 line-clamp-2">{n.message}</p>
+                      <p className="text-[10px] font-medium text-slate-400 mt-2 flex items-center gap-1">
                         {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </p>
                     </div>
