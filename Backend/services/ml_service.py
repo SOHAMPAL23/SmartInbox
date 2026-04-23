@@ -44,9 +44,17 @@ def init_spam_detector() -> SpamDetectorService:
     """
     global _detector
     if _detector is not None:
+        if not _detector._loaded:
+            print("[ML] Detector found but not loaded. Retrying load...")
+            try:
+                _detector._load()
+                print(f"[ML] Model {_detector._model_version} loaded successfully on retry.")
+            except Exception as e:
+                print(f"[ML] ERROR: Retry failed: {e}")
         return _detector
         
     model_url = os.environ.get("MODEL_URL")
+
     tag = os.environ.get("MODEL_VERSION", settings.MODEL_VERSION)
     
     print(f"[ML] Initializing detector version: {tag}")
