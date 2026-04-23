@@ -1,123 +1,121 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FileText, ShieldCheck, Zap, Lock, Sparkles, ChevronRight, Search, Cpu } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { FileText, ShieldCheck, Zap, Lock, ChevronRight, Search, Cpu, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { predictText } from "../../api/spamApi";
+import { predictText, getJobStatus } from "../../api/spamApi";
 import { toast } from "react-hot-toast";
 
 export const ScanPage = () => {
   const [text, setText] = useState("");
   const [isPredicting, setIsPredicting] = useState(false);
+  const [jobId, setJobId] = useState(null);
   const navigate = useNavigate();
 
   const handlePredict = async () => {
     if (!text.trim()) return;
     setIsPredicting(true);
     try {
-      const data = await predictText(text);
-      navigate("/results", { state: { result: data } });
+      const { job_id } = await predictText(text);
+      setJobId(job_id);
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Neural analysis interrupted.");
-    } finally {
+      toast.error(err.response?.data?.detail || "Analysis failed.");
       setIsPredicting(false);
     }
   };
 
+  useEffect(() => {
+    if (!jobId) return;
+
+    let pollInterval = setInterval(async () => {
+      try {
+        const job = await getJobStatus(jobId);
+        if (job.status === "completed") {
+          clearInterval(pollInterval);
+          navigate("/results", { state: { result: job.result } });
+        } else if (job.status === "failed") {
+          clearInterval(pollInterval);
+          toast.error(job.error || "Neural processing failed.");
+          setIsPredicting(false);
+          setJobId(null);
+        }
+      } catch (err) {
+        clearInterval(pollInterval);
+        setIsPredicting(false);
+      }
+    }, 1000);
+
+    return () => clearInterval(pollInterval);
+  }, [jobId, navigate]);
+
   return (
-    <div className="max-w-5xl mx-auto space-y-12 pb-24">
-      {/* Header Section */}
-      <div className="space-y-4">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase text-cyan-400"
-        >
-          <Search size={14} /> Threat Intel Scan
-        </motion.div>
-        <h1 className="text-5xl font-black text-white tracking-tighter">
-          Instant <span className="neon-text-blue">Message Analysis</span>
-        </h1>
-        <p className="text-slate-400 max-w-2xl font-medium leading-relaxed">
-          Input suspicious SMS content into our neural gateway. Our model will perform deep vector analysis and pattern recognition to detect malicious intent.
-        </p>
+    <div className="max-w-4xl mx-auto space-y-8 animate-in">
+      {/* Header */}
+      <div className="space-y-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-bold uppercase tracking-widest border border-indigo-100">
+          <Search size={12} /> Neural Gateway
+        </div>
+        <h1 className="text-4xl font-black text-slate-900 tracking-tight">Instant Analysis</h1>
+        <p className="text-sm text-slate-500 font-medium">Input suspicious content for real-time neural classification.</p>
       </div>
 
       {/* Input Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass p-10 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden group"
-      >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
-        
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-white/5 rounded-lg">
-              <FileText size={18} className="text-slate-400" />
-            </div>
-            <span className="text-xs font-black tracking-widest text-slate-300 uppercase">Input Stream</span>
+      <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <FileText size={14} /> Payload Stream
           </div>
-          <div className="px-3 py-1 bg-black/40 border border-white/5 rounded-full text-[10px] font-bold text-slate-500">
-            {text.length} / 1000 CHARS
+          <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+            {text.length} / 1000
           </div>
         </div>
 
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Paste message content here for real-time analysis..."
+          placeholder="Paste message content here..."
           maxLength={1000}
-          className="w-full h-64 bg-slate-900/30 border border-white/10 rounded-2xl p-6 text-lg text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:bg-slate-900/50 transition-all resize-none font-medium tracking-tight"
+          className="w-full h-64 bg-slate-50 border border-slate-200 rounded-2xl p-6 text-lg text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all resize-none font-medium"
         />
 
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
-          <div className="flex items-center gap-3 text-slate-500">
-            <Lock size={16} />
-            <span className="text-[10px] font-bold tracking-widest uppercase">E2EE Privacy Shield Active</span>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2 text-slate-400">
+            <Lock size={14} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Encrypted</span>
           </div>
           
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={handlePredict}
             disabled={!text.trim() || isPredicting}
-            className="btn-premium flex items-center justify-center gap-3 px-12 h-14 w-full sm:w-auto disabled:opacity-50"
+            className="btn-premium flex items-center justify-center gap-3 px-10 h-12 w-full sm:w-auto disabled:opacity-50"
           >
             {isPredicting ? (
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span className="text-sm font-black tracking-widest uppercase">Analyzing...</span>
-              </div>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                <span className="text-sm font-black tracking-widest uppercase">Start Analysis</span>
-                <ChevronRight size={18} />
+                <span className="text-[10px] font-bold tracking-widest uppercase">Start Analysis</span>
+                <ChevronRight size={16} />
               </>
             )}
-          </motion.button>
+          </button>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Feature Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* Features */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { icon: Cpu, title: "Neural Core", desc: "RandomForest pipeline trained on 2M+ validated message vectors.", color: "cyan" },
-          { icon: ShieldCheck, title: "Defanging", desc: "Automatic neutralization of malicious links and phishing hooks.", color: "blue" },
-          { icon: Sparkles, title: "Zero Retention", desc: "Processing in volatile memory only. No data is persisted post-scan.", color: "purple" }
+          { icon: Cpu, title: "Neural Core", desc: "RandomForest pipeline trained on 2M+ message vectors.", color: "indigo" },
+          { icon: ShieldCheck, title: "Precision", desc: "Char-level analysis for defanging phishing hooks.", color: "emerald" },
+          { icon: Zap, title: "Latency", desc: "Sub-100ms inference via optimized FastAPI backend.", color: "rose" }
         ].map((feature, i) => (
-          <motion.div 
-            key={i}
-            whileHover={{ y: -5 }}
-            className="glass-card p-6"
-          >
-            <div className={`p-3 rounded-xl bg-${feature.color}-500/10 border border-${feature.color}-500/20 w-fit mb-4`}>
-              <feature.icon className={`w-5 h-5 text-${feature.color}-400`} />
+          <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div className={`p-2.5 rounded-xl bg-${feature.color}-50 text-${feature.color}-600 border border-${feature.color}-100 w-fit mb-4`}>
+              <feature.icon size={16} />
             </div>
-            <h4 className="text-lg font-bold text-white mb-2">{feature.title}</h4>
-            <p className="text-xs text-slate-500 leading-relaxed font-medium">
+            <h4 className="text-sm font-bold text-slate-900 mb-1">{feature.title}</h4>
+            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
               {feature.desc}
             </p>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
