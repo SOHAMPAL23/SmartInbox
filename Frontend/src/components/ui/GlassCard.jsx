@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 
-export const GlassCard = ({ children, className, delay = 0 }) => {
+export const MinimalCard = ({ children, className, delay = 0 }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5, ease: "easeOut" }}
       className={clsx(
-        "bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl relative overflow-hidden",
+        "bg-white  border border-slate-200 shadow-md rounded-2xl relative overflow-hidden",
         className
       )}
     >
