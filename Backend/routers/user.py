@@ -11,12 +11,13 @@ from datetime import datetime, timezone
 from typing import Annotated, Any, Dict, Optional
 
 import pandas as pd
-from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile, status, BackgroundTasks
 from fastapi.responses import StreamingResponse
 
 from app.auth.dependencies import CurrentUser, DBSession
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.database import AsyncSessionLocal
 from app.schemas.prediction import (
     BatchCSVResponse,
     BatchPredictRequest,
@@ -65,6 +66,11 @@ def _compute_verdict(probability: float, threshold: float) -> tuple[str, float]:
     return verdict, confidence
 
 
+async def _create_notif_bg(notif: NotificationCreate):
+    async with AsyncSessionLocal() as session:
+        await create_notification(session, notif)
+
+
 # ── POST /user/predict ────────────────────────────────────────────────────────
 
 @router.post(
@@ -78,6 +84,7 @@ async def predict(
     current_user: CurrentUser,
     db:           DBSession,
     ml:           MLService,
+    background_tasks: BackgroundTasks,
 ) -> PredictionOut:
     """
     Classify a single SMS message as **spam** or **ham**.
@@ -115,7 +122,7 @@ async def predict(
             message=f"Neural core intercepted a malicious message: '{req.text[:50]}...'",
             type="security"
         )
-        await create_notification(db, notif)
+        background_tasks.add_task(_create_notif_bg, notif)
 
     await db.commit()
     await db.refresh(pred)

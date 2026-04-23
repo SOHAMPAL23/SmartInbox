@@ -180,21 +180,34 @@ export const AnalyticsPage = () => {
                 <div className="h-[200px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
+                      <defs>
+                        <linearGradient id="pieSpam" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f43f5e" stopOpacity={1}/>
+                          <stop offset="95%" stopColor="#be123c" stopOpacity={1}/>
+                        </linearGradient>
+                        <linearGradient id="pieHam" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={1}/>
+                          <stop offset="95%" stopColor="#1d4ed8" stopOpacity={1}/>
+                        </linearGradient>
+                      </defs>
                       <Pie
                         data={[
                           { name: "Spam", value: stats.spam_blocked },
                           { name: "Clean", value: stats.total_scanned - stats.spam_blocked }
                         ]}
-                        innerRadius={50}
-                        outerRadius={70}
-                        paddingAngle={2}
+                        innerRadius={55}
+                        outerRadius={80}
+                        paddingAngle={4}
                         dataKey="value"
+                        stroke="none"
+                        cornerRadius={6}
                       >
-                        <Cell fill="#f43f5e" />
-                        <Cell fill="#3b82f6" />
+                        <Cell fill="url(#pieSpam)" />
+                        <Cell fill="url(#pieHam)" />
                       </Pie>
                       <Tooltip 
-                        contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "12px" }}
+                        contentStyle={{ backgroundColor: "#ffffff", border: "none", borderRadius: "12px", fontSize: "12px", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)" }}
+                        itemStyle={{ color: "#0f172a", fontWeight: 600 }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
