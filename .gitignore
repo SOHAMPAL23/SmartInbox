@@ -70,3 +70,4 @@ logs/
 *~
 .DS_Store
 Thumbs.db
+tools/
