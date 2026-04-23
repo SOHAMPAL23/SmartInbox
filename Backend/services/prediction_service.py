@@ -8,7 +8,22 @@ CSV export, and admin-wide analytics.
 import csv
 import io
 from datetime import datetime, timedelta, timezone
+import time
 from typing import Any, AsyncIterator, Dict, List, Optional
+import uuid
+
+# Global in-memory cache for analytical results
+_ANALYTICS_CACHE: Dict[str, Any] = {}
+_CACHE_TTL = 60  # seconds
+
+def get_cached(key: str) -> Optional[Any]:
+    entry = _ANALYTICS_CACHE.get(key)
+    if entry and (time.time() - entry['ts'] < _CACHE_TTL):
+        return entry['data']
+    return None
+
+def set_cached(key: str, data: Any):
+    _ANALYTICS_CACHE[key] = {'data': data, 'ts': time.time()}
 
 from sqlalchemy import Integer, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +35,20 @@ from app.models.user import User
 from app.schemas.prediction import HistoryItem, HistoryResponse, TrendPoint, SpamTrendsResponse
 
 logger = get_logger("prediction_service")
+
+# ── Simple In-Memory Cache ───────────────────────────────────────────────────
+_cache = {}
+CACHE_TTL = 30  # 30 seconds
+
+def get_cached(key: str) -> Optional[Any]:
+    if key in _cache:
+        val, ts = _cache[key]
+        if (datetime.now() - ts).total_seconds() < CACHE_TTL:
+            return val
+    return None
+
+def set_cached(key: str, value: Any):
+    _cache[key] = (value, datetime.now())
 
 
 async def store_prediction(
@@ -127,15 +156,16 @@ async def get_user_history(
 
 
 async def get_user_spam_trends_by_id(
-    db:      AsyncSession,
-    user_id: Any,
-    days:    int = 7,
+    db:   AsyncSession,
+    user_id: uuid.UUID,
+    days: int = 7,
 ) -> SpamTrendsResponse:
-    """
-    Admin version of get_spam_trends - takes a user_id instead of a user object.
-    """
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    """Return daily counts for a specific user ID."""
+    cache_key = f"trends_{user_id}_{days}"
+    cached = get_cached(cache_key)
+    if cached: return cached
 
+    since = datetime.now(timezone.utc) - timedelta(days=days)
     stmt = (
         select(
             func.date(Prediction.predicted_at).label("date"),
@@ -148,7 +178,6 @@ async def get_user_spam_trends_by_id(
         .order_by(func.date(Prediction.predicted_at))
     )
     rows = (await db.execute(stmt)).all()
-
     points = [
         TrendPoint(
             date       = str(row.date),
@@ -159,8 +188,9 @@ async def get_user_spam_trends_by_id(
         )
         for row in rows
     ]
-
-    return SpamTrendsResponse(period=f"last_{days}_days", points=points)
+    res = SpamTrendsResponse(period=f"last_{days}_days", points=points)
+    set_cached(cache_key, res)
+    return res
 
 
 async def get_spam_trends(
@@ -171,6 +201,11 @@ async def get_spam_trends(
     """
     Return daily spam/ham counts for the past *days* days for *user*.
     """
+    # Cache check
+    cache_key = f"trends_{user.id}_{days}"
+    cached = get_cached(cache_key)
+    if cached: return cached
+
     since = datetime.now(timezone.utc) - timedelta(days=days)
 
     stmt = (
@@ -196,9 +231,9 @@ async def get_spam_trends(
         )
         for row in rows
     ]
-
-    return SpamTrendsResponse(period=f"last_{days}_days", points=points)
-
+    res = SpamTrendsResponse(period=f"last_{days}_days", points=points)
+    set_cached(cache_key, res)
+    return res
 
 async def get_user_stats(
     db:   AsyncSession,
@@ -206,30 +241,35 @@ async def get_user_stats(
 ) -> Dict[str, Any]:
     """
     Return a summary of prediction stats for *user*.
-    - total_scanned
-    - spam_blocked
-    - threat_level (Low/Medium/High based on spam ratio)
-    - trend_total (change in last 24h)
-    - trend_spam (change in last 24h)
     """
-    # Total counts
+    # Cache check
+    cache_key = f"stats_{user.id}"
+    cached = get_cached(cache_key)
+    if cached: return cached
+
+    # Run queries in parallel
+    import asyncio
     stmt = select(
         func.count().label("total"),
         func.sum(func.cast(Prediction.is_spam, Integer)).label("spam_count"),
     ).where(Prediction.user_id == user.id)
     
-    res = (await db.execute(stmt)).one()
-    total = res.total or 0
-    spam  = int(res.spam_count or 0)
-    
-    # Last 24h for trends
     since_24h = datetime.now(timezone.utc) - timedelta(hours=24)
     stmt_24h = select(
         func.count().label("total"),
         func.sum(func.cast(Prediction.is_spam, Integer)).label("spam_count"),
     ).where(Prediction.user_id == user.id).where(Prediction.predicted_at >= since_24h)
+
+    res_task = db.execute(stmt)
+    res_24h_task = db.execute(stmt_24h)
     
-    res_24h = (await db.execute(stmt_24h)).one()
+    res_out, res_24h_out = await asyncio.gather(res_task, res_24h_task)
+    
+    res = res_out.one()
+    res_24h = res_24h_out.one()
+
+    total = res.total or 0
+    spam  = int(res.spam_count or 0)
     total_24h = res_24h.total or 0
     spam_24h  = int(res_24h.spam_count or 0)
     
@@ -242,7 +282,7 @@ async def get_user_stats(
     else:
         threat = "Low"
 
-    return {
+    data = {
         "total_scanned": total,
         "spam_blocked":  spam,
         "threat_level":  threat,
@@ -251,6 +291,8 @@ async def get_user_stats(
             "spam":  f"+{spam_24h}" if spam_24h > 0 else "0",
         }
     }
+    set_cached(cache_key, data)
+    return data
 
 
 
@@ -263,6 +305,11 @@ async def get_global_analytics(
     """
     Return global analytics across ALL users.
     """
+    # Cache check
+    cache_key = f"global_analytics_{days}"
+    cached = get_cached(cache_key)
+    if cached: return cached
+
     since = datetime.now(timezone.utc) - timedelta(days=days)
 
     # Total counts
@@ -305,7 +352,7 @@ async def get_global_analytics(
         for r in daily_rows
     ]
 
-    return {
+    data = {
         "total_messages":  total,
         "total_spam":      spam_count,
         "total_ham":       ham_count,
@@ -315,6 +362,8 @@ async def get_global_analytics(
         "active_users":    active_users,
         "recent_activity": recent_activity,
     }
+    set_cached(cache_key, data)
+    return data
 
 
 async def get_all_users_with_count(

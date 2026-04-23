@@ -33,8 +33,9 @@ async def register_user(db: AsyncSession, req: RegisterRequest) -> User:
     Raises HTTP 409 if email or username is already taken.
     """
     # ── Uniqueness checks ─────────────────────────────────────────────────────
+    email_clean = req.email.lower().strip()
     existing_email = (
-        await db.execute(select(User).where(User.email == req.email))
+        await db.execute(select(User).where(User.email == email_clean))
     ).scalar_one_or_none()
 
     if existing_email:
@@ -70,7 +71,7 @@ async def register_user(db: AsyncSession, req: RegisterRequest) -> User:
             return existing
 
     user = User(
-        email           = req.email,
+        email           = email_clean,
         username        = req.username,
         hashed_password = hash_password(req.password),
         role            = UserRole.admin if is_admin else UserRole.user,
@@ -92,11 +93,23 @@ async def login_user(db: AsyncSession, req: LoginRequest) -> TokenResponse:
 
     Raises HTTP 401 on invalid credentials.
     """
+    email_clean = req.email.lower().strip()
+    logger.debug("Login attempt │ email=%s", email_clean)
+
     user = (
-        await db.execute(select(User).where(User.email == req.email))
+        await db.execute(select(User).where(User.email == email_clean))
     ).scalar_one_or_none()
 
-    if not user or not verify_password(req.password, user.hashed_password):
+    if not user:
+        logger.warning("Login failed: User not found │ email=%s", email_clean)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not verify_password(req.password, user.hashed_password):
+        logger.warning("Login failed: Incorrect password │ email=%s", email_clean)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password.",
