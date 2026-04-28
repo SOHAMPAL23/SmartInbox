@@ -46,14 +46,14 @@ In an era of increasing digital communication, spam messages are more than just 
 - Real-time spam detection.
 - Historical data visualization.
 
-### 🛡️ For Admins
+###  For Admins
 - System status monitoring.
 - Adjustable spam detection sensitivity.
 - User management and analytics.
 
 ---
 
-## 👥 User Roles
+##  User Roles
 
 | Role | Description |
 | :--- | :--- |
@@ -63,7 +63,7 @@ In an era of increasing digital communication, spam messages are more than just 
 
 ---
 
-## 💻 Getting Started
+##  Getting Started
 
 *(Instructions to be added once codebase is initialized)*
 
@@ -86,7 +86,7 @@ In an era of increasing digital communication, spam messages are more than just 
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
