@@ -17,7 +17,7 @@ export const NotificationBell = () => {
   const fetchNotifs = useCallback(async () => {
     try {
       const { data } = await axiosClient.get("/notifications");
-      setNotifications(data.items || []);
+      setNotifications((data.items || []).filter(n => !n.is_read));
     } catch {
       // silent — user may be on a page before login is complete
     }
@@ -44,7 +44,9 @@ export const NotificationBell = () => {
         try {
           const notif = JSON.parse(event.data);
           if (notif.type === "ping") return;
-          setNotifications((prev) => [notif, ...prev]);
+          if (!notif.is_read) {
+            setNotifications((prev) => [notif, ...prev]);
+          }
         } catch { /* ignore malformed */ }
       };
 
@@ -84,9 +86,7 @@ export const NotificationBell = () => {
   const handleRead = useCallback(async (id) => {
     try {
       await axiosClient.patch(`/notifications/${id}/read`);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-      );
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
     } catch { /* silent */ }
   }, []);
 

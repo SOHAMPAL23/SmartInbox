@@ -260,24 +260,26 @@ export const BatchUploadPage = () => {
               </div>
             </div>
 
-            <div className="max-h-[500px] overflow-y-auto divide-y divide-slate-100 no-scrollbar">
-              {results.results.map((row) => (
-                <div key={row.row} className="grid grid-cols-12 gap-6 px-8 py-5 items-center hover:bg-slate-50 transition-colors group">
-                  <div className="col-span-1 text-[9px] font-bold text-slate-300 uppercase">#{row.row}</div>
-                  <div className="col-span-8">
-                    <p className="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-600 transition-colors">"{row.message}"</p>
+            <div className="max-h-[500px] overflow-y-auto overflow-x-auto divide-y divide-slate-100 no-scrollbar">
+              <div className="min-w-[700px]">
+                {results.results.map((row) => (
+                  <div key={row.row} className="grid grid-cols-12 gap-6 px-8 py-5 items-center hover:bg-slate-50 transition-colors group">
+                    <div className="col-span-1 text-[9px] font-bold text-slate-300 uppercase">#{row.row}</div>
+                    <div className="col-span-8">
+                      <p className="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-600 transition-colors">"{row.message}"</p>
+                    </div>
+                    <div className="col-span-3 flex justify-end">
+                      {row.error ? (
+                        <span className="text-[9px] font-bold text-rose-600 uppercase tracking-widest bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
+                          Error
+                        </span>
+                      ) : (
+                        <VerdictBadge verdict={row.verdict} />
+                      )}
+                    </div>
                   </div>
-                  <div className="col-span-3 flex justify-end">
-                    {row.error ? (
-                      <span className="text-[9px] font-bold text-rose-600 uppercase tracking-widest bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
-                        Error
-                      </span>
-                    ) : (
-                      <VerdictBadge verdict={row.verdict} />
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>

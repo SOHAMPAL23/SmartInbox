@@ -174,32 +174,37 @@ export const HistoryPage = () => {
           </div>
         </div>
 
-        {/* Table Header */}
-        <div className="grid grid-cols-12 gap-6 px-8 py-3 bg-slate-50 border-b border-slate-200 text-[9px] font-bold tracking-widest text-slate-400 uppercase">
-          <div className="col-span-6">Message Matrix</div>
-          <div className="col-span-3 text-center">Verdict</div>
-          <div className="col-span-3 text-right">Probability</div>
-        </div>
+        {/* Table Content */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[700px]">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 gap-6 px-8 py-3 bg-slate-50 border-b border-slate-200 text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+              <div className="col-span-6">Message Matrix</div>
+              <div className="col-span-3 text-center">Verdict</div>
+              <div className="col-span-3 text-right">Probability</div>
+            </div>
 
-        {/* Table Body with Virtualization */}
-        <div className="min-h-[500px] bg-slate-50">
-          {loading ? (
-            <div className="h-[500px] flex items-center justify-center">
-              <RefreshCw className="animate-spin text-indigo-600" size={32} />
+            {/* Table Body with Virtualization */}
+            <div className="min-h-[500px] bg-slate-50">
+              {loading ? (
+                <div className="h-[500px] flex items-center justify-center">
+                  <RefreshCw className="animate-spin text-indigo-600" size={32} />
+                </div>
+              ) : history.length > 0 ? (
+                <VirtualList 
+                  items={history} 
+                  itemHeight={73} 
+                  containerHeight={500}
+                  renderItem={(msg) => <LogItem key={msg.id} msg={msg} />}
+                />
+              ) : (
+                <div className="h-[500px] flex flex-col items-center justify-center text-slate-500 gap-4">
+                  <FileText size={48} className="opacity-10" />
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">No logs detected</p>
+                </div>
+              )}
             </div>
-          ) : history.length > 0 ? (
-            <VirtualList 
-              items={history} 
-              itemHeight={73} 
-              containerHeight={500}
-              renderItem={(msg) => <LogItem key={msg.id} msg={msg} />}
-            />
-          ) : (
-            <div className="h-[500px] flex flex-col items-center justify-center text-slate-500 gap-4">
-              <FileText size={48} className="opacity-10" />
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">No logs detected</p>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Pagination */}

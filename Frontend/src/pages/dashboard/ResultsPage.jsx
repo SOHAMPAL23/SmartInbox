@@ -88,11 +88,11 @@ export const ResultsPage = () => {
             />
 
             <div className="text-center">
-              <h2 className={`text-6xl font-black tracking-tighter mb-2 ${isSpam ? "text-rose-500" : "text-emerald-500"}`}>
-                {isSpam ? "SPAM" : "CLEAN"}
+              <h2 className={`text-4xl font-black tracking-tighter mb-2 ${isSpam ? "text-rose-500" : "text-emerald-500"}`}>
+                {result.verdict ? result.verdict.toUpperCase() : (isSpam ? "SPAM" : "CLEAN")}
               </h2>
               <div className={`inline-flex items-center gap-2 px-4 py-1 rounded-full border ${isSpam ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-emerald-50 border-emerald-100 text-emerald-600"} text-[9px] font-black uppercase tracking-widest`}>
-                {isSpam ? "Dangerous" : "Secure"}
+                {result.confidence_tier ? `Confidence: ${result.confidence_tier}` : (isSpam ? "Dangerous" : "Secure")}
               </div>
             </div>
           </div>

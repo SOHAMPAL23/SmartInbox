@@ -120,18 +120,20 @@ export const AdminLogsPage = () => {
           </div>
         </div>
 
-        <div className="min-h-[600px] py-4 bg-white">
-          {loading ? (
-            <div className="h-[500px] flex items-center justify-center">
-              <RefreshCw className="animate-spin text-indigo-600" size={32} />
-            </div>
-          ) : (
-            <div className="space-y-0.5">
-              {logs.map((log, i) => (
-                <LogEntry key={log.id} log={log} i={i} />
-              ))}
-            </div>
-          )}
+        <div className="min-h-[600px] py-4 bg-white overflow-x-auto">
+          <div className="min-w-[800px]">
+            {loading ? (
+              <div className="h-[500px] flex items-center justify-center">
+                <RefreshCw className="animate-spin text-indigo-600" size={32} />
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                {logs.map((log, i) => (
+                  <LogEntry key={log.id} log={log} i={i} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer */}

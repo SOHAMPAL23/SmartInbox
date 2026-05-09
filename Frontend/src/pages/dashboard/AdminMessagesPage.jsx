@@ -175,31 +175,35 @@ export const AdminMessagesPage = () => {
 
       {/* Table */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="grid grid-cols-12 gap-6 px-8 py-3 bg-slate-50 border-b border-slate-200 text-[9px] font-bold tracking-widest text-slate-400 uppercase">
-          <div className="col-span-6">Payload Matrix</div>
-          <div className="col-span-2 text-center">Entity</div>
-          <div className="col-span-2 text-center">Confidence</div>
-          <div className="col-span-2 text-right">Actions</div>
-        </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[800px]">
+            <div className="grid grid-cols-12 gap-6 px-8 py-3 bg-slate-50 border-b border-slate-200 text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+              <div className="col-span-6">Payload Matrix</div>
+              <div className="col-span-2 text-center">Entity</div>
+              <div className="col-span-2 text-center">Confidence</div>
+              <div className="col-span-2 text-right">Actions</div>
+            </div>
 
-        <div className="min-h-[500px] bg-slate-50">
-          {loading ? (
-            <div className="h-[500px] flex items-center justify-center">
-              <RefreshCw className="animate-spin text-indigo-600" size={32} />
+            <div className="min-h-[500px] bg-slate-50">
+              {loading ? (
+                <div className="h-[500px] flex items-center justify-center">
+                  <RefreshCw className="animate-spin text-indigo-600" size={32} />
+                </div>
+              ) : data.items.length > 0 ? (
+                <VirtualList 
+                  items={data.items} 
+                  itemHeight={73} 
+                  containerHeight={500}
+                  renderItem={(item) => <MessageItem key={item.prediction_id} item={item} onDelete={handleDelete} />}
+                />
+              ) : (
+                <div className="h-[500px] flex flex-col items-center justify-center text-slate-500 gap-4">
+                  <MessageSquare size={48} className="opacity-10" />
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">No intercepts detected</p>
+                </div>
+              )}
             </div>
-          ) : data.items.length > 0 ? (
-            <VirtualList 
-              items={data.items} 
-              itemHeight={73} 
-              containerHeight={500}
-              renderItem={(item) => <MessageItem key={item.prediction_id} item={item} onDelete={handleDelete} />}
-            />
-          ) : (
-            <div className="h-[500px] flex flex-col items-center justify-center text-slate-500 gap-4">
-              <MessageSquare size={48} className="opacity-10" />
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">No intercepts detected</p>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Pagination */}

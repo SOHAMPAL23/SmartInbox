@@ -27,25 +27,32 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Toaster
-          position="top-right"
+          position="top-center"
+          reverseOrder={false}
           toastOptions={{
-            duration: 3500,
+            duration: 5000,
             style: {
-              background: "#FFFFFF",
-              color: "#1e293b",
-              border: "1px solid #e2e8f0",
-              borderRadius: "12px",
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(12px)",
+              color: "#0f172a",
+              border: "1px solid rgba(226, 232, 240, 0.8)",
+              borderRadius: "100px",
               fontSize: "14px",
+              fontWeight: "600",
               fontFamily: "Inter, sans-serif",
-              padding: "12px 16px",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+              padding: "14px 24px",
+              boxShadow: "0 20px 40px -10px rgba(0,0,0,0.1), 0 10px 20px -5px rgba(0,0,0,0.05)",
+              maxWidth: "500px",
             },
             success: {
-              iconTheme: { primary: "#16a34a", secondary: "#fff" },
+              iconTheme: { primary: "#10b981", secondary: "#fff" },
             },
             error: {
-              iconTheme: { primary: "#dc2626", secondary: "#fff" },
+              iconTheme: { primary: "#ef4444", secondary: "#fff" },
             },
+            loading: {
+              iconTheme: { primary: "#6366f1", secondary: "#fff" },
+            }
           }}
         />
         <AppRoutes />

@@ -1,186 +1,134 @@
-import React, { useMemo, useRef, useEffect } from 'react';
-import * as d3 from 'd3';
+import React from 'react';
+import { 
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
 
-export const D3LineChart = React.memo(({ data, width = 600, height = 300, color = "#4f46e5" }) => {
-  const svgRef = useRef();
-
-  const chartData = useMemo(() => {
+export const D3LineChart = React.memo(({ data, height = 300, color = "#4f46e5" }) => {
+  const chartData = React.useMemo(() => {
     if (!data || data.length === 0) return [];
-    return data.map((d, i) => ({ x: i, y: d.value }));
+    return data.map((d, i) => ({ name: d.label || i, value: d.value }));
   }, [data]);
 
-  useEffect(() => {
-    if (!svgRef.current || chartData.length === 0) return;
-
-    const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove();
-
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
-
-    const x = d3.scaleLinear()
-      .domain([0, chartData.length - 1])
-      .range([0, innerWidth]);
-
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(chartData, d => d.y) || 1])
-      .range([innerHeight, 0]);
-
-    const line = d3.line()
-      .x(d => x(d.x))
-      .y(d => y(d.y))
-      .curve(d3.curveMonotoneX);
-
-    const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    // Add X axis
-    g.append("g")
-      .attr("transform", `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(x).ticks(5).tickSizeOuter(0))
-      .attr("color", "#94a3b8")
-      .style("font-size", "10px");
-
-    // Add Y axis
-    g.append("g")
-      .call(d3.axisLeft(y).ticks(5))
-      .attr("color", "#94a3b8")
-      .style("font-size", "10px");
-
-    // Add line with animation
-    const path = g.append("path")
-      .datum(chartData)
-      .attr("fill", "none")
-      .attr("stroke", color)
-      .attr("stroke-width", 2.5)
-      .attr("stroke-linejoin", "round")
-      .attr("stroke-linecap", "round")
-      .attr("d", line);
-
-    const length = path.node().getTotalLength();
-
-    path.attr("stroke-dasharray", length + " " + length)
-      .attr("stroke-dashoffset", length)
-      .transition()
-      .duration(800)
-      .ease(d3.easeCubicOut)
-      .attr("stroke-dashoffset", 0);
-
-  }, [chartData, width, height, color]);
-
   return (
-    <div className="w-full flex justify-center">
-      <svg ref={svgRef} width={width} height={height} className="overflow-visible" />
+    <div style={{ width: '100%', height: height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+          <XAxis 
+            dataKey="name" 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{ fill: '#94a3b8', fontSize: 10 }}
+            dy={10}
+            interval="preserveStartEnd"
+          />
+          <YAxis 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{ fill: '#94a3b8', fontSize: 10 }}
+            dx={-10}
+            tickFormatter={(val) => Number.isInteger(val) ? val : val.toFixed(1)}
+          />
+          <Tooltip 
+            contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            labelStyle={{ color: '#64748b', fontSize: '12px', fontWeight: 'bold' }}
+            itemStyle={{ color: color, fontSize: '14px', fontWeight: 'bold' }}
+            formatter={(value) => [Number(value).toFixed(4), "Value"]}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="value" 
+            stroke={color} 
+            strokeWidth={3} 
+            dot={false} 
+            activeDot={{ r: 6, strokeWidth: 0, fill: color }}
+            animationDuration={1500}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 });
 
-export const D3BarChart = React.memo(({ data, width = 600, height = 300, color = "#4f46e5" }) => {
-  const svgRef = useRef();
-
-  useEffect(() => {
-    if (!svgRef.current || !data || data.length === 0) return;
-
-    const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove();
-
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
-
-    const x = d3.scaleBand()
-      .domain(data.map((_, i) => i))
-      .range([0, innerWidth])
-      .padding(0.3);
-
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.value) || 1])
-      .range([innerHeight, 0]);
-
-    const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    g.append("g")
-      .attr("transform", `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(x).tickFormat(i => data[i].label).tickSizeOuter(0))
-      .attr("color", "#94a3b8")
-      .style("font-size", "10px");
-
-    g.append("g")
-      .call(d3.axisLeft(y).ticks(5))
-      .attr("color", "#94a3b8")
-      .style("font-size", "10px");
-
-    g.selectAll(".bar")
-      .data(data)
-      .enter().append("rect")
-      .attr("class", "bar")
-      .attr("x", (_, i) => x(i))
-      .attr("y", innerHeight)
-      .attr("width", x.bandwidth())
-      .attr("height", 0)
-      .attr("fill", color)
-      .attr("rx", 4)
-      .transition()
-      .duration(800)
-      .delay((_, i) => i * 50)
-      .ease(d3.easeCubicOut)
-      .attr("y", d => y(d.value))
-      .attr("height", d => innerHeight - y(d.value));
-
-  }, [data, width, height, color]);
+export const D3BarChart = React.memo(({ data, height = 300, color = "#4f46e5" }) => {
+  const chartData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    return data.map((d, i) => ({ name: d.label || i, value: d.value }));
+  }, [data]);
 
   return (
-    <div className="w-full flex justify-center">
-      <svg ref={svgRef} width={width} height={height} className="overflow-visible" />
+    <div style={{ width: '100%', height: height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+          <XAxis 
+            dataKey="name" 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{ fill: '#94a3b8', fontSize: 10 }}
+            dy={10}
+          />
+          <YAxis 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{ fill: '#94a3b8', fontSize: 10 }}
+            dx={-10}
+            tickFormatter={(val) => Number.isInteger(val) ? val : val.toFixed(1)}
+          />
+          <Tooltip 
+            cursor={{ fill: '#f8fafc' }}
+            contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            labelStyle={{ color: '#64748b', fontSize: '12px', fontWeight: 'bold' }}
+            itemStyle={{ color: color, fontSize: '14px', fontWeight: 'bold' }}
+            formatter={(value) => [Number(value).toFixed(4), "Weight"]}
+          />
+          <Bar 
+            dataKey="value" 
+            fill={color} 
+            radius={[4, 4, 4, 4]} 
+            animationDuration={1500}
+          />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 });
 
 export const D3DonutChart = React.memo(({ data, size = 200 }) => {
-  const svgRef = useRef();
+  const chartData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    return data.map((d) => ({ name: d.label, value: d.value }));
+  }, [data]);
 
-  useEffect(() => {
-    if (!svgRef.current || !data || data.length === 0) return;
-
-    const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove();
-
-    const radius = size / 2;
-    const innerRadius = radius * 0.7;
-    
-    const color = d3.scaleOrdinal()
-      .domain(data.map(d => d.label))
-      .range(["#4f46e5", "#10b981", "#f59e0b", "#ef4444"]);
-
-    const pie = d3.pie().value(d => d.value).sort(null);
-    const arc = d3.arc().innerRadius(innerRadius).outerRadius(radius);
-
-    const g = svg.append("g")
-      .attr("transform", `translate(${radius},${radius})`);
-
-    const path = g.selectAll("path")
-      .data(pie(data))
-      .enter().append("path")
-      .attr("fill", d => color(d.data.label))
-      .attr("d", arc)
-      .each(function(d) { this._current = d; });
-
-    path.transition()
-      .duration(800)
-      .attrTween("d", function(d) {
-        const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
-        return function(t) {
-          return arc(interpolate(t));
-        };
-      });
-
-  }, [data, size]);
+  const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
   return (
-    <div className="w-full flex justify-center">
-      <svg ref={svgRef} width={size} height={size} className="overflow-visible" />
+    <div style={{ width: '100%', height: '100%', minHeight: size }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Tooltip 
+            contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            itemStyle={{ fontSize: '14px', fontWeight: 'bold' }}
+            formatter={(value) => [Number(value).toFixed(2), "Value"]}
+          />
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            innerRadius="65%"
+            outerRadius="85%"
+            paddingAngle={2}
+            dataKey="value"
+            animationDuration={1500}
+            stroke="none"
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   );
 });

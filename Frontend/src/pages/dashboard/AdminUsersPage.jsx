@@ -197,127 +197,131 @@ export const AdminUsersPage = () => {
 
       {/* User Grid */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="grid grid-cols-12 gap-6 px-8 py-4 bg-slate-50 border-b border-slate-100 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-          <div className="col-span-3">Entity Details</div>
-          <div className="col-span-2 text-center">Authorization</div>
-          <div className="col-span-3 text-center">Activity Metrics</div>
-          <div className="col-span-2 text-center">Status</div>
-          <div className="col-span-2 text-right">Actions</div>
-        </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[900px]">
+            <div className="grid grid-cols-12 gap-6 px-8 py-4 bg-slate-50 border-b border-slate-100 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+              <div className="col-span-3">Entity Details</div>
+              <div className="col-span-2 text-center">Authorization</div>
+              <div className="col-span-3 text-center">Activity Metrics</div>
+              <div className="col-span-2 text-center">Status</div>
+              <div className="col-span-2 text-right">Actions</div>
+            </div>
 
-        <div className="min-h-[400px]">
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <div className="h-[400px] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-              </div>
-            ) : users.length > 0 ? (
-              <div className="divide-y divide-slate-100">
-                {users.map((u, i) => (
-                  <motion.div 
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    key={u.id}
-                    className="grid grid-cols-12 gap-6 px-8 py-6 items-center hover:bg-slate-50/50 transition-colors group"
-                  >
-                    <div className="col-span-3 flex gap-4 items-center">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-sm font-black text-white shadow-md">
-                        {u.username?.[0]?.toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-slate-800 truncate">
-                          {u.username}
-                          {u.id === currentUser?.id && <span className="ml-2 text-[8px] px-1.5 py-0.5 bg-slate-900 text-white rounded">YOU</span>}
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-2">
-                          <Mail size={10} /> {u.email}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="col-span-2 flex justify-center">
-                      {u.role === "admin" ? (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-[9px] font-black uppercase tracking-widest">
-                          <Crown size={12} /> Admin
+            <div className="min-h-[400px]">
+              <AnimatePresence mode="wait">
+                {loading ? (
+                  <div className="h-[400px] flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                  </div>
+                ) : users.length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {users.map((u, i) => (
+                      <motion.div 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        key={u.id}
+                        className="grid grid-cols-12 gap-6 px-8 py-6 items-center hover:bg-slate-50/50 transition-colors group"
+                      >
+                        <div className="col-span-3 flex gap-4 items-center">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-sm font-black text-white shadow-md flex-shrink-0">
+                            {u.username?.[0]?.toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-slate-800 truncate">
+                              {u.username}
+                              {u.id === currentUser?.id && <span className="ml-2 text-[8px] px-1.5 py-0.5 bg-slate-900 text-white rounded">YOU</span>}
+                            </p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-2 truncate">
+                              <Mail size={10} /> {u.email}
+                            </p>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest">
-                          <Shield size={12} /> User
+
+                        <div className="col-span-2 flex justify-center">
+                          {u.role === "admin" ? (
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-[9px] font-black uppercase tracking-widest">
+                              <Crown size={12} /> Admin
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest">
+                              <Shield size={12} /> User
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    <div className="col-span-3 flex flex-col items-center gap-2">
-                      <div className="flex justify-between w-full max-w-[120px] text-[10px] font-bold">
-                        <span className="text-rose-500">{u.spam_count || 0}</span>
-                        <span className="text-slate-300">/</span>
-                        <span className="text-emerald-600">{u.ham_count || 0}</span>
-                      </div>
-                      <div className="w-32 h-1 bg-slate-100 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-indigo-500" 
-                          style={{ width: `${Math.min(100, ((u.prediction_count || 0) / (u.prediction_count || 1)) * 100)}%` }} 
-                        />
-                      </div>
-                    </div>
+                        <div className="col-span-3 flex flex-col items-center gap-2">
+                          <div className="flex justify-between w-full max-w-[120px] text-[10px] font-bold">
+                            <span className="text-rose-500">{u.spam_count || 0}</span>
+                            <span className="text-slate-300">/</span>
+                            <span className="text-emerald-600">{u.ham_count || 0}</span>
+                          </div>
+                          <div className="w-32 h-1 bg-slate-100 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-indigo-500" 
+                              style={{ width: `${Math.min(100, ((u.prediction_count || 0) / (u.prediction_count || 1)) * 100)}%` }} 
+                            />
+                          </div>
+                        </div>
 
-                    <div className="col-span-2 flex justify-center">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${u.is_active ? "bg-emerald-50 border-emerald-100 text-emerald-600" : "bg-rose-50 border-rose-100 text-rose-600"} text-[9px] font-black uppercase tracking-widest`}>
-                        {u.is_active ? "Active" : "Locked"}
-                      </div>
-                    </div>
+                        <div className="col-span-2 flex justify-center">
+                          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${u.is_active ? "bg-emerald-50 border-emerald-100 text-emerald-600" : "bg-rose-50 border-rose-100 text-rose-600"} text-[9px] font-black uppercase tracking-widest`}>
+                            {u.is_active ? "Active" : "Locked"}
+                          </div>
+                        </div>
 
-                    <div className="col-span-2 flex justify-end gap-2">
-                      <button 
-                        onClick={() => {
-                          setNotifyingUser(u);
-                          const ratio = (u.spam_count || 0) / (u.prediction_count || 1);
-                          if (ratio > 0.35) {
-                            setNotifContent({
-                              title: "Urgent Security Protocol",
-                              message: `Our neural core has detected that ${((u.spam_count/u.prediction_count)*100).toFixed(0)}% of your incoming traffic is malicious. Please exercise extreme caution with recent messages.`,
-                              type: "security"
-                            });
-                          }
-                        }}
-                        className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
-                        title="Dispatch Alert"
-                      >
-                        <Bell size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleViewAnalytics(u)}
-                        className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
-                        title="View Analytics"
-                      >
-                        <BarChart2 size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleToggle(u.id, u.is_active)}
-                        disabled={u.id === currentUser?.id}
-                        className={`p-2 rounded-xl border border-slate-100 transition-all ${u.id === currentUser?.id ? "opacity-20 cursor-not-allowed" : u.is_active ? "text-rose-500 hover:bg-rose-50" : "text-emerald-500 hover:bg-emerald-50"}`}
-                      >
-                        {u.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
-                      </button>
-                      <button 
-                        onClick={() => setConfirmDelete(u)}
-                        disabled={u.id === currentUser?.id}
-                        className={`p-2 rounded-xl border border-slate-100 text-slate-400 transition-all ${u.id === currentUser?.id ? "opacity-20 cursor-not-allowed" : "hover:text-rose-600 hover:bg-rose-50"}`}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="h-[400px] flex flex-col items-center justify-center text-slate-400 space-y-4">
-                <Users size={48} className="opacity-20" />
-                <p className="text-sm font-medium tracking-tight">No entities found in this sector.</p>
-              </div>
-            )}
-          </AnimatePresence>
+                        <div className="col-span-2 flex justify-end gap-2">
+                          <button 
+                            onClick={() => {
+                              setNotifyingUser(u);
+                              const ratio = (u.spam_count || 0) / (u.prediction_count || 1);
+                              if (ratio > 0.35) {
+                                setNotifContent({
+                                  title: "Urgent Security Protocol",
+                                  message: `Our neural core has detected that ${((u.spam_count/u.prediction_count)*100).toFixed(0)}% of your incoming traffic is malicious. Please exercise extreme caution with recent messages.`,
+                                  type: "security"
+                                });
+                              }
+                            }}
+                            className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                            title="Dispatch Alert"
+                          >
+                            <Bell size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleViewAnalytics(u)}
+                            className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                            title="View Analytics"
+                          >
+                            <BarChart2 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleToggle(u.id, u.is_active)}
+                            disabled={u.id === currentUser?.id}
+                            className={`p-2 rounded-xl border border-slate-100 transition-all ${u.id === currentUser?.id ? "opacity-20 cursor-not-allowed" : u.is_active ? "text-rose-500 hover:bg-rose-50" : "text-emerald-500 hover:bg-emerald-50"}`}
+                          >
+                            {u.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
+                          </button>
+                          <button 
+                            onClick={() => setConfirmDelete(u)}
+                            disabled={u.id === currentUser?.id}
+                            className={`p-2 rounded-xl border border-slate-100 text-slate-400 transition-all ${u.id === currentUser?.id ? "opacity-20 cursor-not-allowed" : "hover:text-rose-600 hover:bg-rose-50"}`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-[400px] flex flex-col items-center justify-center text-slate-400 space-y-4">
+                    <Users size={48} className="opacity-20" />
+                    <p className="text-sm font-medium tracking-tight">No entities found in this sector.</p>
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
 
         {/* Pagination */}
