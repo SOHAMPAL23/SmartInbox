@@ -1,0 +1,146 @@
+{
+  "model_version": "v6",
+  "model_type": "soft_vote_ensemble",
+  "ensemble_composition": {
+    "rf": {
+      "weight": 0.3,
+      "n_estimators": 300
+    },
+    "xgb": {
+      "weight": 0.2,
+      "available": true
+    },
+    "lgbm": {
+      "weight": 0.2,
+      "available": true
+    },
+    "mlp": {
+      "weight": 0.2,
+      "available": true
+    },
+    "iso": {
+      "weight": 0.1,
+      "available": true
+    }
+  },
+  "trained_at": "2026-05-09T19:12:34.470224+00:00",
+  "completed_at": "2026-05-09T19:16:00.736116+00:00",
+  "seed": 42,
+  "optimal_threshold": 0.51,
+  "confidence_tiers": {
+    "spam": "> 0.61",
+    "suspicious": "0.40 \u2013 0.61",
+    "ham": "< 0.40"
+  },
+  "config": {
+    "word_max_features": 10000,
+    "char_max_features": 6000,
+    "numeric_features": 29,
+    "test_size": 0.2,
+    "adversarial_aug": true,
+    "hard_negatives": 290
+  },
+  "datasets": {
+    "primary": "ml\\data\\spam.csv",
+    "secondary": "C:\\Users\\Admin\\Desktop\\SmartInbox\\ml\\data\\spam_ham_dataset_10k.csv",
+    "total_rows": 8545,
+    "train_size": 6836,
+    "test_size": 1709,
+    "spam_count": 3774,
+    "ham_count": 4771
+  },
+  "test_metrics": {
+    "roc_auc": 0.9998,
+    "pr_auc": 0.9997,
+    "optimal_threshold": 0.51,
+    "optimal_f1": 0.994,
+    "precision": 0.9947,
+    "recall": 0.9934,
+    "confusion_matrix": [
+      [
+        950,
+        4
+      ],
+      [
+        5,
+        750
+      ]
+    ],
+    "false_positives": 4,
+    "false_negatives": 5,
+    "classification_report": {
+      "ham": {
+        "precision": 0.9947643979057592,
+        "recall": 0.9958071278825996,
+        "f1-score": 0.9952854897852279,
+        "support": 954.0
+      },
+      "spam": {
+        "precision": 0.9946949602122016,
+        "recall": 0.9933774834437086,
+        "f1-score": 0.9940357852882704,
+        "support": 755.0
+      },
+      "accuracy": 0.994733762434172,
+      "macro avg": {
+        "precision": 0.9947296790589804,
+        "recall": 0.994592305663154,
+        "f1-score": 0.9946606375367492,
+        "support": 1709.0
+      },
+      "weighted avg": {
+        "precision": 0.9947337218035731,
+        "recall": 0.994733762434172,
+        "f1-score": 0.994733396809685,
+        "support": 1709.0
+      }
+    }
+  },
+  "rf_standalone_metrics": {
+    "roc_auc": 0.9988,
+    "pr_auc": 0.9986,
+    "optimal_threshold": 0.52,
+    "optimal_f1": 0.9841,
+    "precision": 0.9841,
+    "recall": 0.9841,
+    "confusion_matrix": [
+      [
+        942,
+        12
+      ],
+      [
+        12,
+        743
+      ]
+    ],
+    "false_positives": 12,
+    "false_negatives": 12,
+    "classification_report": {
+      "ham": {
+        "precision": 0.9874213836477987,
+        "recall": 0.9874213836477987,
+        "f1-score": 0.9874213836477987,
+        "support": 954.0
+      },
+      "spam": {
+        "precision": 0.9841059602649007,
+        "recall": 0.9841059602649007,
+        "f1-score": 0.9841059602649007,
+        "support": 755.0
+      },
+      "accuracy": 0.9859566998244588,
+      "macro avg": {
+        "precision": 0.9857636719563497,
+        "recall": 0.9857636719563497,
+        "f1-score": 0.9857636719563497,
+        "support": 1709.0
+      },
+      "weighted avg": {
+        "precision": 0.9859566998244588,
+        "recall": 0.9859566998244588,
+        "f1-score": 0.9859566998244588,
+        "support": 1709.0
+      }
+    }
+  }
+}
