@@ -180,9 +180,9 @@ export const AdminMessagesPage = () => {
             <button
               key={String(f.val)}
               onClick={() => { setFilter(f.val); setPage(1); }}
-              className={`px-5 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all ${
+              className={`px-5 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all ${
                 filter === f.val 
-                  ? "bg-slate-900 text-white shadow-sm" 
+                  ? "bg-slate-900 text-white shadow-lg shadow-slate-200" 
                   : "text-slate-500 hover:text-slate-900"
               }`}
             >
