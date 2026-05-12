@@ -1,0 +1,103 @@
+{
+  "model_version": "v4",
+  "model_type": "RandomForestClassifier",
+  "trained_at": "2026-05-09T12:47:27.589548+00:00",
+  "completed_at": "2026-05-09T12:47:37.996078+00:00",
+  "seed": 42,
+  "uncertainty_margin": 0.08,
+  "optimal_threshold": 0.51,
+  "confidence_tiers": {
+    "spam": "> 0.71",
+    "suspicious": "0.51 \u2013 0.71",
+    "ham": "< 0.51"
+  },
+  "config": {
+    "n_estimators": 300,
+    "max_depth": 30,
+    "min_samples_split": 8,
+    "min_samples_leaf": 4,
+    "max_features": "sqrt",
+    "class_weight": "balanced",
+    "word_max_features": 8000,
+    "char_max_features": 5000,
+    "numeric_features": 20,
+    "test_size": 0.2,
+    "cv_folds": 5,
+    "adversarial_aug": true,
+    "hard_negatives": 110
+  },
+  "dataset": {
+    "total_rows": 6403,
+    "train_size": 5122,
+    "test_size": 1281,
+    "spam_count": 1916,
+    "ham_count": 4487
+  },
+  "test_metrics": {
+    "model_name": "Random Forest v4",
+    "train_accuracy": 0.992,
+    "test_accuracy": 0.9875,
+    "accuracy_gap": 0.0045,
+    "train_f1": 0.9866,
+    "test_f1": 0.9792,
+    "f1_gap": 0.0074,
+    "overfitting_flag": false,
+    "roc_auc": 0.9987,
+    "pr_auc": 0.9976,
+    "precision": 0.9766,
+    "recall": 0.9817,
+    "optimal_threshold": 0.51,
+    "optimal_f1": 0.9792,
+    "confusion_matrix": [
+      [
+        889,
+        9
+      ],
+      [
+        7,
+        376
+      ]
+    ],
+    "classification_report": {
+      "ham": {
+        "precision": 0.9921875,
+        "recall": 0.9899777282850779,
+        "f1-score": 0.9910813823857302,
+        "support": 898.0
+      },
+      "spam": {
+        "precision": 0.9766233766233766,
+        "recall": 0.9817232375979112,
+        "f1-score": 0.9791666666666666,
+        "support": 383.0
+      },
+      "accuracy": 0.9875097580015613,
+      "macro avg": {
+        "precision": 0.9844054383116883,
+        "recall": 0.9858504829414946,
+        "f1-score": 0.9851240245261984,
+        "support": 1281.0
+      },
+      "weighted avg": {
+        "precision": 0.9875340579599947,
+        "recall": 0.9875097580015613,
+        "f1-score": 0.9875190591067284,
+        "support": 1281.0
+      }
+    },
+    "false_positives": 9,
+    "false_negatives": 7
+  },
+  "cv_metrics": {
+    "cv_accuracy_mean": 0.9852,
+    "cv_accuracy_std": 0.0052,
+    "cv_f1_mean": 0.975,
+    "cv_f1_std": 0.009,
+    "cv_roc_auc_mean": 0.9976,
+    "cv_roc_auc_std": 0.0018,
+    "cv_precision_mean": 0.9821,
+    "cv_precision_std": 0.0062,
+    "cv_recall_mean": 0.968,
+    "cv_recall_std": 0.0138
+  }
+}

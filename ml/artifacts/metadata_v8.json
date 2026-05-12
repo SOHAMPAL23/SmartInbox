@@ -1,0 +1,100 @@
+{
+  "model_version": "v8",
+  "model_type": "soft_vote",
+  "ensemble_composition": {
+    "nb": {
+      "weight": 0.1,
+      "type": "ComplementNB"
+    },
+    "lr": {
+      "weight": 0.2,
+      "type": "LogisticRegression"
+    },
+    "rf": {
+      "weight": 0.3,
+      "type": "RandomForestClassifier"
+    },
+    "xgb": {
+      "weight": 0.2,
+      "type": "XGBClassifier"
+    },
+    "lgbm": {
+      "weight": 0.2,
+      "type": "LGBMClassifier"
+    }
+  },
+  "trained_at": "2026-05-12T14:31:18.614165+00:00",
+  "completed_at": "2026-05-12T14:33:45.817956+00:00",
+  "seed": 42,
+  "optimal_threshold": 0.3000000000000001,
+  "confidence_tiers": {
+    "spam": "> 0.60",
+    "suspicious": "0.38 - 0.60",
+    "ham": "< 0.38"
+  },
+  "config": {
+    "smote_applied": true,
+    "synthetic_ai_spam_samples": 20,
+    "synthetic_phishing_samples": 8,
+    "synthetic_social_engineering": 4,
+    "test_size": 0.2,
+    "xgboost_available": true,
+    "lightgbm_available": true
+  },
+  "datasets": {
+    "total_rows": 5703,
+    "train_size": 4562,
+    "test_size": 1141,
+    "spam_count": 674,
+    "ham_count": 5029
+  },
+  "test_metrics": {
+    "roc_auc": 0.9912,
+    "pr_auc": 0.9697,
+    "f1": 0.9434,
+    "precision": 0.9615,
+    "recall": 0.9259,
+    "accuracy": 0.9869,
+    "optimal_threshold": 0.3000000000000001,
+    "optimal_f1": 0.9434,
+    "confusion_matrix": [
+      [
+        1001,
+        5
+      ],
+      [
+        10,
+        125
+      ]
+    ],
+    "false_positives": 5,
+    "false_negatives": 10,
+    "classification_report": {
+      "ham": {
+        "precision": 0.990108803165183,
+        "recall": 0.9950298210735586,
+        "f1-score": 0.992563212692117,
+        "support": 1006.0
+      },
+      "spam": {
+        "precision": 0.9615384615384616,
+        "recall": 0.9259259259259259,
+        "f1-score": 0.9433962264150944,
+        "support": 135.0
+      },
+      "accuracy": 0.9868536371603857,
+      "macro avg": {
+        "precision": 0.9758236323518223,
+        "recall": 0.9604778734997423,
+        "f1-score": 0.9679797195536057,
+        "support": 1141.0
+      },
+      "weighted avg": {
+        "precision": 0.9867284384678935,
+        "recall": 0.9868536371603857,
+        "f1-score": 0.9867459093201643,
+        "support": 1141.0
+      }
+    }
+  }
+}
