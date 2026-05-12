@@ -1,8 +1,16 @@
 import { axiosClient } from "./axiosClient";
 
-// ── Single prediction ─────────────────────────────────────────────────────────
+// ── Single prediction (queued job) ────────────────────────────────────────────
 export const predictText = async (text) => {
   const { data } = await axiosClient.post("/user/predict", { text });
+  return data;
+};
+
+// ── Deep hybrid analysis (synchronous, full 4-layer pipeline) ─────────────────
+export const analyzeAiSpam = async (text) => {
+  const { data } = await axiosClient.post("/user/analyze-ai-spam", { text }, {
+    timeout: 30000, // 30s — Groq may take up to 8s
+  });
   return data;
 };
 
@@ -18,7 +26,7 @@ export const predictBatchCSV = async (file, onUploadProgress) => {
   formData.append("file", file);
   const { data } = await axiosClient.post("/user/predict-batch-csv", formData, {
     headers: { "Content-Type": "multipart/form-data" },
-    timeout: 120000, // 2 min for large files
+    timeout: 120000,
     onUploadProgress,
   });
   return data;
@@ -30,12 +38,13 @@ export const getSpamTrends = async (days = 7) => {
   return data;
 };
 
-// ── User stats ──────────────────────────────────────────────────────────────────
+// ── Job status ────────────────────────────────────────────────────────────────
 export const getJobStatus = async (jobId) => {
   const res = await axiosClient.get(`/jobs/${jobId}`);
   return res.data;
 };
 
+// ── User stats ────────────────────────────────────────────────────────────────
 export const getUserStats = async () => {
   const { data } = await axiosClient.get("/user/stats");
   return data;
@@ -49,7 +58,13 @@ export const getHistory = async (page = 1, size = 20, isSpam = null) => {
   return data;
 };
 
-// ── Export history as CSV download ────────────────────────────────────────────
+// ── Threat report ─────────────────────────────────────────────────────────────
+export const getThreatReport = async (days = 30) => {
+  const { data } = await axiosClient.get(`/user/threat-report?days=${days}`);
+  return data;
+};
+
+// ── Export history as CSV ─────────────────────────────────────────────────────
 export const exportHistory = async (filters = {}) => {
   const params = new URLSearchParams();
   if (filters.isSpam !== null && filters.isSpam !== undefined)
@@ -61,7 +76,6 @@ export const exportHistory = async (filters = {}) => {
     responseType: "blob",
   });
 
-  // Trigger browser download
   const url  = window.URL.createObjectURL(new Blob([response.data]));
   const link = document.createElement("a");
   link.href  = url;
