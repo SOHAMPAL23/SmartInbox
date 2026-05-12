@@ -23,10 +23,14 @@ from app.schemas.prediction import (
     BatchPredictionOut,
     CSVRowResult,
     HistoryResponse,
+    HistoryItem,
     PredictRequest,
     PredictionOut,
     SpamTrendsResponse,
-    JobResponse
+    JobResponse,
+    AiSpamAnalysisRequest,
+    AiSpamAnalysisResponse,
+    ThreatReportResponse
 )
 from app.services.job_service import job_service
 from app.services.ml_service import MLService, translate_ml_error
@@ -300,29 +304,193 @@ async def export_history(
 ):
     """
     Export your SMS classification history as a downloadable **CSV file**.
-
-    - Filter by spam/ham with `?is_spam=true/false`
-    - Filter by date range with `?from_date=` and `?to_date=` (ISO format)
-    - Empty data → returns empty CSV with headers (no error)
-    - Large datasets are streamed efficiently
     """
-    logger.info(
-        "export │ user=%s │ is_spam=%s │ from=%s │ to=%s",
-        current_user.username, is_spam, from_date, to_date,
-    )
-
+    logger.info("export │ user=%s │ is_spam=%s │ from=%s │ to=%s",
+                current_user.username, is_spam, from_date, to_date)
     csv_content = await export_user_predictions_csv(
-        db,
-        user_id   = current_user.id,
-        is_spam   = is_spam,
-        from_date = from_date,
-        to_date   = to_date,
+        db, user_id=current_user.id, is_spam=is_spam, from_date=from_date, to_date=to_date,
     )
-
     filename = f"smartinbox_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
-
     return StreamingResponse(
         iter([csv_content]),
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ── POST /user/analyze-ai-spam ────────────────────────────────────────────────
+
+@router.post(
+    "/analyze-ai-spam",
+    status_code=status.HTTP_200_OK,
+    response_model=AiSpamAnalysisResponse,
+    summary="Deep hybrid AI spam analysis (synchronous full pipeline)",
+)
+async def analyze_ai_spam(
+    body:         AiSpamAnalysisRequest,
+    current_user: CurrentUser,
+    ml:           MLService,
+) -> Dict[str, Any]:
+    """
+    Run the **full 4-layer hybrid pipeline** synchronously:
+    - Layer 1: ML ensemble (RF + XGB + LightGBM + NB + LR)
+    - Layer 2: Groq LLM semantic analysis
+    - Layer 3: Heuristic + threat intelligence
+    - Layer 4: Weighted ensemble decision
+
+    Returns the complete intelligence report immediately (no job queue).
+    """
+    text = body.text.strip()
+
+    text = text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="text must not be empty.")
+    if len(text) > 2000:
+        raise HTTPException(status_code=400, detail="text exceeds 2000 characters.")
+
+    start_t = time.perf_counter()
+    try:
+        result = ml.predict(text)
+    except Exception as exc:
+        raise translate_ml_error(exc)
+    latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
+
+    return {
+        "text":                       text,
+        "final_prediction":           result.get("final_prediction", "spam" if result["prediction"] == 1 else "ham"),
+        "final_confidence":           result.get("final_confidence", round(result["probability"] * 100, 2)),
+        "threat_level":               result.get("threat_level", "low"),
+        "ml_model_score":             result.get("ml_model_score", round(result["probability"] * 100, 2)),
+        "groq_semantic_score":        result.get("groq_semantic_score", 0.0),
+        "heuristic_score":            result.get("heuristic_score", 0.0),
+        "ai_generated_probability":   result.get("ai_generated_probability", 0.0),
+        "phishing_probability":       result.get("phishing_probability", 0.0),
+        "spam_type":                  result.get("spam_type", "ham"),
+        "spam_type_confidence":       result.get("spam_type_confidence", 0.0),
+        "spam_type_explanation":      result.get("spam_type_explanation", ""),
+        "spam_scores":                result.get("spam_scores", {}),
+        "detected_categories":        result.get("detected_categories", []),
+        "reasoning":                  result.get("reasoning", ""),
+        "recommended_action":         result.get("recommended_action", ""),
+        "feature_importance":         result.get("feature_importance", []),
+        "safe_for_user":              result.get("safe_for_user", result["prediction"] == 0),
+        "groq_available":             result.get("groq_available", False),
+        "latency_ms":                 latency_ms,
+    }
+
+
+# ── GET /user/threat-report ───────────────────────────────────────────────────
+
+@router.get(
+    "/threat-report",
+    status_code=status.HTTP_200_OK,
+    summary="Aggregated threat intelligence report from your history",
+)
+async def threat_report(
+    current_user: CurrentUser,
+    db:           DBSession,
+    days:         Annotated[int, Query(ge=1, le=365, description="Lookback window")] = 30,
+) -> Dict[str, Any]:
+    """
+    Aggregate threat intelligence from the user's prediction history.
+    Returns breakdown by threat level, spam type, AI-generated count, etc.
+    """
+    from sqlalchemy import select, func, cast, Integer
+    from app.models.prediction import Prediction
+    from datetime import timedelta, timezone
+    from app.services.cache_service import cache_manager
+
+    cache_key = f"threat_report_{current_user.id}_{days}"
+    cached = cache_manager.get(cache_key)
+    if cached:
+        return cached
+
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+
+    # All predictions in window (with message join for text)
+    from sqlalchemy.orm import selectinload
+    stmt = select(Prediction).where(
+        Prediction.user_id == current_user.id,
+        Prediction.predicted_at >= since,
+    ).options(selectinload(Prediction.message))
+    rows = (await db.execute(stmt)).scalars().all()
+
+    total = len(rows)
+    threat_breakdown: Dict[str, int] = {"low": 0, "medium": 0, "high": 0, "critical": 0}
+    type_breakdown: Dict[str, int] = {}
+    ai_gen_count = 0
+    phishing_count = 0
+    category_counter: Dict[str, int] = {}
+
+    for row in rows:
+        tl = (row.threat_level or "low").lower()
+        threat_breakdown[tl] = threat_breakdown.get(tl, 0) + 1
+        st = row.spam_type or "unknown"
+        type_breakdown[st] = type_breakdown.get(st, 0) + 1
+        if (row.ai_generated_probability or 0) > 50:
+            ai_gen_count += 1
+        if (row.phishing_probability or 0) > 50:
+            phishing_count += 1
+        for cat in (row.detected_categories or []):
+            category_counter[cat] = category_counter.get(cat, 0) + 1
+
+    spam_count = sum(1 for r in rows if r.is_spam)
+    risk_score = round(
+        (threat_breakdown.get("critical", 0) * 1.0 +
+         threat_breakdown.get("high", 0) * 0.7 +
+         threat_breakdown.get("medium", 0) * 0.3) / max(total, 1) * 100, 2
+    )
+
+    if risk_score > 60:
+        overall_threat = "critical"
+    elif risk_score > 35:
+        overall_threat = "high"
+    elif risk_score > 15:
+        overall_threat = "medium"
+    else:
+        overall_threat = "low"
+
+    top_cats = sorted(
+        [{"category": k, "count": v} for k, v in category_counter.items()],
+        key=lambda x: x["count"], reverse=True
+    )[:10]
+
+    report = {
+        "user_id":               str(current_user.id),
+        "period_days":           days,
+        "total_analyzed":        total,
+        "spam_count":            spam_count,
+        "ham_count":             total - spam_count,
+        "threat_breakdown":      threat_breakdown,
+        "spam_type_breakdown":   type_breakdown,
+        "ai_generated_count":    ai_gen_count,
+        "phishing_count":        phishing_count,
+        "top_detected_categories": top_cats,
+        "overall_threat_level":  overall_threat,
+        "risk_score":            risk_score,
+        "recent_threats": [
+            HistoryItem(
+                id             = r.id,
+                text           = r.message.text,
+                prediction     = r.prediction,
+                probability    = r.probability,
+                threshold_used = r.threshold_used,
+                is_spam        = r.is_spam,
+                predicted_at   = r.predicted_at,
+                model_version  = r.model_version,
+                spam_type      = r.spam_type,
+                spam_type_confidence = r.spam_type_confidence,
+                spam_type_explanation = r.spam_type_explanation,
+                spam_scores    = {"ai_spam": r.ai_spam_score, "traditional_spam": r.traditional_spam_score, "ham": r.ham_score} if r.ai_spam_score is not None else None,
+                threat_level               = r.threat_level,
+                ai_generated_probability   = r.ai_generated_probability,
+                phishing_probability       = r.phishing_probability,
+                detected_categories        = r.detected_categories if isinstance(r.detected_categories, list) else None,
+                reasoning                  = r.reasoning,
+                recommended_action         = r.recommended_action
+            )
+            for r in rows[:5]
+        ]
+    }
+    cache_manager.set(cache_key, report, ttl=120)
+    return report

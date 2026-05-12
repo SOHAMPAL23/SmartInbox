@@ -17,7 +17,7 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: MODEL_VERSION
-        value: v3
+        value: v7
       - key: MODEL_URL
         sync: false # Set this in Render Dashboard (Direct link to your .pkl file)
       - key: ADMIN_SETUP_KEY

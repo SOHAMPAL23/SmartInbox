@@ -26,7 +26,7 @@ pydantic>=2.7.0
 pydantic-settings>=2.3.0
 email-validator>=2.1.0           # EmailStr support
 requests>=2.31.0
-
+aiohttp>=3.9.0                   # async HTTP for Groq API calls
 
 # ── ML core ──────────────────────────────────────────────────────────────────
 scikit-learn>=1.4.0
@@ -43,6 +43,10 @@ joblib>=1.3.0                   # parallel ensemble persistence
 xgboost>=2.0.0
 lightgbm>=4.0.0
 
+# ── Groq LLM API (Layer 2 Semantic Analysis) ─────────────────────────────────
+groq>=0.5.0                      # Official Groq Python client
+
 # ── Optional: Semantic embeddings (uncomment for GPU deployments) ─────────────
 # sentence-transformers>=2.7.0  # ~90MB; requires torch; adds 50-200ms/msg latency
 # torch>=2.0.0
+

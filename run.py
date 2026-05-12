@@ -20,6 +20,10 @@ import importlib
 import pkgutil
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file immediately
+load_dotenv()
 
 # ── 1. Ensure the project root is on sys.path ────────────────────────────────
 ROOT = Path(__file__).resolve().parent

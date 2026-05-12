@@ -69,15 +69,17 @@ class MetricsResponse(BaseModel):
 class ModelInfoResponse(BaseModel):
     model_version:     str
     threshold:         float
-    trained_at:        str
-    roc_auc:           float
-    pr_auc:            float
-    f1:                float
-    accuracy:          float
-    optimal_f1:        float
-    optimal_threshold: float
-    n_features:        int
-    n_estimators:      int
+    trained_at:        Optional[str] = "unknown"
+    roc_auc:           Optional[float] = 0.0
+    pr_auc:            Optional[float] = 0.0
+    f1:                Optional[float] = 0.0
+    accuracy:          Optional[float] = 0.0
+    optimal_f1:        Optional[float] = 0.0
+    optimal_threshold: Optional[float] = 0.5
+    n_features:        Optional[int] = 0
+    n_estimators:      Optional[int] = 0
+    is_ensemble:       bool = False
+    groq_enabled:      bool = False
 
 
 # ── Feature importance ────────────────────────────────────────────────────────

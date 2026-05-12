@@ -27,7 +27,7 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       LOG_LEVEL: "INFO"
       LOG_FILE: "logs/api.log"
-      MODEL_VERSION: "v2"
+      MODEL_VERSION: "v7"
       ADMIN_SETUP_KEY: "SmartInbox@Admin2026"
       ALLOWED_ORIGINS: '["http://localhost:3000","http://localhost:5173","http://localhost"]'
     ports:
