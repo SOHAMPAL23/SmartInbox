@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { PublicOnlyRoute } from "../components/PublicOnlyRoute";
 import { DashboardLayout } from "../layout/DashboardLayout";
@@ -10,6 +10,8 @@ import { Spinner } from "../components/ui/Spinner";
 const LandingPage = lazy(() => import("../pages/LandingPage").then(module => ({ default: module.LandingPage })));
 const Login = lazy(() => import("../pages/auth/Login").then(module => ({ default: module.Login })));
 const Register = lazy(() => import("../pages/auth/Register").then(module => ({ default: module.Register })));
+const AdminLogin = lazy(() => import("../pages/auth/AdminLogin").then(module => ({ default: module.AdminLogin })));
+const AdminRegister = lazy(() => import("../pages/auth/AdminRegister").then(module => ({ default: module.AdminRegister })));
 
 // Dashboard pages
 const UserDashboard = lazy(() => import("../pages/dashboard/UserDashboard").then(module => ({ default: module.UserDashboard })));
@@ -37,7 +39,15 @@ const SuspenseLayout = ({ children }) => (
 
 const SmartRedirect = () => {
   const user = useStore((state) => state.user);
-  if (!user) return <Navigate to="/login" replace />;
+  const location = useLocation();
+
+  if (!user) {
+    // If logging out from admin area, go to admin login
+    if (location.pathname.startsWith("/admin")) {
+      return <Navigate to="/admin/login" replace />;
+    }
+    return <Navigate to="/login" replace />;
+  }
   return <Navigate to={user.role === "admin" ? "/admin" : "/dashboard"} replace />;
 };
 
@@ -74,6 +84,26 @@ export const AppRoutes = () => (
           <PublicOnlyRoute>
             <SuspenseLayout>
               <Register />
+            </SuspenseLayout>
+          </PublicOnlyRoute>
+        }
+      />
+      <Route
+        path="/admin/login"
+        element={
+          <PublicOnlyRoute>
+            <SuspenseLayout>
+              <AdminLogin />
+            </SuspenseLayout>
+          </PublicOnlyRoute>
+        }
+      />
+      <Route
+        path="/admin/register"
+        element={
+          <PublicOnlyRoute>
+            <SuspenseLayout>
+              <AdminRegister />
             </SuspenseLayout>
           </PublicOnlyRoute>
         }

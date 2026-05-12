@@ -48,9 +48,9 @@ const StatsCard = memo(({ title, value, icon: Icon, color, trend }) => (
 const ThreatBadge = ({ level }) => {
   const cfg = {
     critical: "bg-red-50 text-red-600 border-red-100",
-    high:     "bg-orange-50 text-orange-600 border-orange-100",
-    medium:   "bg-amber-50 text-amber-600 border-amber-100",
-    low:      "bg-emerald-50 text-emerald-600 border-emerald-100",
+    high: "bg-orange-50 text-orange-600 border-orange-100",
+    medium: "bg-amber-50 text-amber-600 border-amber-100",
+    low: "bg-emerald-50 text-emerald-600 border-emerald-100",
   };
   const color = cfg[level?.toLowerCase()] || cfg.low;
   return (
@@ -94,7 +94,7 @@ export const UserDashboard = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-indigo-100 mb-2">
-             <Activity size={10} /> Active Monitoring
+            <Activity size={10} /> Active Monitoring
           </div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">
             Security Overview
@@ -103,9 +103,9 @@ export const UserDashboard = () => {
             Welcome back, <span className="text-indigo-600 font-bold">{user?.username}</span>. System is currently <span className="text-emerald-600 font-bold">Optimal</span>.
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={() => navigate("/scan")}
             className="btn-premium flex items-center gap-3 h-12 px-8"
           >
@@ -117,90 +117,45 @@ export const UserDashboard = () => {
 
       {/* ── Stats Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        <StatsCard 
-          title="Total Analyzed" 
-          value={stats.total_scanned.toLocaleString()} 
-          icon={TrendingUp} 
-          color="indigo" 
-          trend={stats.trends.total !== "0" ? stats.trends.total : null} 
+        <StatsCard
+          title="Total Analyzed"
+          value={stats.total_scanned.toLocaleString()}
+          icon={TrendingUp}
+          color="indigo"
+          trend={stats.trends.total !== "0" ? stats.trends.total : null}
         />
-        <StatsCard 
-          title="Threats Neutralized" 
-          value={stats.spam_blocked.toLocaleString()} 
-          icon={ShieldCheck} 
-          color="rose" 
-          trend={stats.trends.spam !== "0" ? stats.trends.spam : null} 
+        <StatsCard
+          title="Threats Neutralized"
+          value={stats.spam_blocked.toLocaleString()}
+          icon={ShieldCheck}
+          color="rose"
+          trend={stats.trends.spam !== "0" ? stats.trends.spam : null}
         />
-        <StatsCard 
-          title="Global Risk Index" 
-          value={stats.threat_level} 
-          icon={AlertTriangle} 
-          color={stats.threat_level === "High" || stats.threat_level === "Critical" ? "rose" : stats.threat_level === "Medium" ? "amber" : "emerald"} 
+        <StatsCard
+          title="Global Risk Index"
+          value={stats.threat_level}
+          icon={AlertTriangle}
+          color={stats.threat_level === "High" || stats.threat_level === "Critical" ? "rose" : stats.threat_level === "Medium" ? "amber" : "emerald"}
         />
-        <StatsCard 
-          title="AI Confidence" 
-          value="99.1%" 
-          icon={Brain} 
-          color="violet" 
+        <StatsCard
+          title="AI Confidence"
+          value="99.1%"
+          icon={Brain}
+          color="violet"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* ── Activity Chart ── */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 p-8 rounded-3xl shadow-sm space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-3">
-              <Activity size={18} className="text-indigo-600" />
-              Traffic Telemetry
-            </h3>
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full">30-Day Velocity</div>
-          </div>
-          <div className="h-80 w-full overflow-hidden">
-             <D3LineChart data={trends} width={800} height={300} />
-          </div>
+      {/* ── Activity Chart ── */}
+      <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-3">
+            <Activity size={18} className="text-indigo-600" />
+            Traffic Telemetry
+          </h3>
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full">30-Day Velocity</div>
         </div>
-
-        {/* ── Hybrid Intelligence Summary ── */}
-        <div className="bg-indigo-900 rounded-3xl p-8 text-white relative overflow-hidden flex flex-col justify-between">
-          <div className="absolute top-0 right-0 p-8 opacity-10">
-            <Shield size={120} />
-          </div>
-          <div className="space-y-6 relative z-10">
-            <div className="space-y-2">
-              <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Ensemble Status</p>
-              <h3 className="text-2xl font-black tracking-tight">Hybrid AI Active</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
-                <div className="p-2 bg-indigo-500 rounded-xl">
-                  <Cpu size={16} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">ML Layer</p>
-                  <p className="text-xs font-bold">5-Model Ensemble v8</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
-                <div className="p-2 bg-violet-500 rounded-xl">
-                  <Brain size={16} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">Semantic Layer</p>
-                  <p className="text-xs font-bold">Groq Llama-3-70B</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => navigate("/scan")}
-            className="w-full bg-white text-indigo-900 h-12 rounded-xl font-black text-[10px] uppercase tracking-widest mt-8 hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
-          >
-            Start Deep Scan
-            <ChevronRight size={14} />
-          </button>
+        <div className="h-80 w-full overflow-hidden">
+           <D3LineChart data={trends} width={1100} height={300} />
         </div>
       </div>
 
@@ -211,7 +166,7 @@ export const UserDashboard = () => {
             <ShieldCheck size={18} className="text-emerald-600" />
             Advanced Threat Report
           </h3>
-          <button 
+          <button
             onClick={() => navigate("/history")}
             className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline"
           >
@@ -256,7 +211,7 @@ export const UserDashboard = () => {
                     </p>
                   </td>
                   <td className="px-8 py-5 text-right">
-                    <button 
+                    <button
                       onClick={() => navigate("/results", { state: { result: t } })}
                       className="p-2 text-slate-300 group-hover:text-indigo-600 transition-colors"
                     >
