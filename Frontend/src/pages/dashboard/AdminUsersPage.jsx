@@ -423,10 +423,10 @@ export const AdminUsersPage = () => {
                   </div>
                 </div>
                 <button 
-                  onClick={() => setSelectedUser(null)}
-                  className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-slate-400 hover:text-indigo-600 transition-all"
+                  onClick={() => handleViewAnalytics(selectedUser)}
+                  className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-slate-400 hover:text-indigo-600 transition-all shadow-sm"
                 >
-                  <RefreshCw size={20} />
+                  <RefreshCw size={20} className={loadingStats ? "animate-spin" : ""} />
                 </button>
               </div>
 
@@ -482,26 +482,60 @@ export const AdminUsersPage = () => {
                       <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
                     </div>
                   ) : userStats ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={userStats}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={userStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
-                          <linearGradient id="userSpam" x1="0" y1="0" x2="0" y2="1">
+                          <linearGradient id="modalUserSpam" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1}/>
                             <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
                           </linearGradient>
-                          <linearGradient id="userHam" x1="0" y1="0" x2="0" y2="1">
+                          <linearGradient id="modalUserHam" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
                             <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
-                        <XAxis dataKey="date" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
-                        <ChartTooltip 
-                          contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", fontSize: "10px", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)" }}
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                        <XAxis 
+                          dataKey="date" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
+                          dy={10}
                         />
-                        <Area type="monotone" dataKey="spam" stroke="#f43f5e" fillOpacity={1} fill="url(#userSpam)" strokeWidth={2} />
-                        <Area type="monotone" dataKey="ham" stroke="#6366f1" fillOpacity={1} fill="url(#userHam)" strokeWidth={2} />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
+                        />
+                        <ChartTooltip 
+                          contentStyle={{ 
+                            backgroundColor: "rgba(255, 255, 255, 0.9)", 
+                            backdropFilter: "blur(8px)",
+                            border: "1px solid #e2e8f0", 
+                            borderRadius: "16px", 
+                            fontSize: "10px", 
+                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" 
+                          }}
+                          itemStyle={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="spam" 
+                          name="Neutralized"
+                          stroke="#f43f5e" 
+                          strokeWidth={3}
+                          fillOpacity={1} 
+                          fill="url(#modalUserSpam)" 
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="ham" 
+                          name="Verified"
+                          stroke="#6366f1" 
+                          strokeWidth={3}
+                          fillOpacity={1} 
+                          fill="url(#modalUserHam)" 
+                        />
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
