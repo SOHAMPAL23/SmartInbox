@@ -56,57 +56,45 @@ _last_error: Optional[str] = None
 def init_spam_detector() -> SpamDetectorService:
     """
     Initialise the SpamDetectorService singleton.
-    Called once from app lifespan, or on-demand via dependency.
     """
     global _detector
     if _detector is not None:
         if not _detector._loaded:
-            logger.info("[ML] Detector found but not loaded. Retrying load...")
             try:
                 _detector._load()
-                logger.info(f"[ML] Model {_detector._model_version} loaded successfully on retry.")
+                logger.info(f"[ML] Model {_detector._model_version} loaded on retry.")
             except Exception as e:
                 logger.error(f"[ML] ERROR: Retry failed: {e}")
         return _detector
         
-    model_url = os.environ.get("MODEL_URL")
-    tag = os.environ.get("MODEL_VERSION", settings.MODEL_VERSION)
-    
+    tag = os.environ.get("MODEL_VERSION", getattr(settings, "MODEL_VERSION", "v8"))
     logger.info(f"[ML] Initializing detector version: {tag}")
+    
+    # Try ensemble first
+    ensemble_path = _ML_DIR / "models" / f"ensemble_{tag}.pkl"
+    model_path    = _ML_DIR / "models" / f"model_{tag}.pkl"
+    
+    if not (ensemble_path.exists() or model_path.exists()):
+        model_url = os.environ.get("MODEL_URL")
+        if model_url:
+            logger.info(f"[ML] Model missing. Attempting download from {model_url}...")
+            try:
+                os.makedirs(ensemble_path.parent, exist_ok=True)
+                target = ensemble_path if "ensemble" in model_url.lower() else model_path
+                response = requests.get(model_url, stream=True, timeout=60)
+                response.raise_for_status()
+                with open(target, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk: f.write(chunk)
+                logger.info(f"[ML] Download complete: {target}")
+            except Exception as e:
+                logger.error(f"[ML] Download failed: {e}")
     
     detector = SpamDetectorService(
         model_version=tag,
         auto_load=False,
     )
     
-    # Ensure model exists or download it
-    model_path = _ML_DIR / "models" / f"model_{tag}.pkl"
-    
-    if not model_path.exists():
-        if model_url:
-            # Handle Dropbox/Drive links by transforming them to direct download if possible
-            if "dropbox.com" in model_url and "dl=1" not in model_url:
-                model_url = model_url.replace("dl=0", "dl=1")
-                if "dl=1" not in model_url:
-                    model_url = model_url + ("&" if "?" in model_url else "?") + "dl=1"
-            
-            logger.info(f"[ML] Model missing at {model_path}. Downloading from {model_url}...")
-            try:
-                os.makedirs(model_path.parent, exist_ok=True)
-                response = requests.get(model_url, stream=True, timeout=60)
-                response.raise_for_status()
-                with open(model_path, "wb") as f:
-                    size = 0
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-                            size += len(chunk)
-                logger.info(f"[ML] Download complete ({size} bytes): {model_path}")
-            except Exception as e:
-                logger.error(f"[ML] CRITICAL: Download failed: {e}")
-        else:
-            logger.warning(f"[ML] WARNING: Model missing and no MODEL_URL provided.")
-
     try:
         detector._load()
         logger.info(f"[ML] Model {tag} loaded successfully.")

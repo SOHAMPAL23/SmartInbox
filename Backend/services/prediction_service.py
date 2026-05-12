@@ -73,15 +73,42 @@ async def process_prediction_job(
             await db.commit()
             
             job_service.update_job(
-                job_id, 
-                status=JobStatus.COMPLETED, 
-                progress=100, 
+                job_id,
+                status=JobStatus.COMPLETED,
+                progress=100,
                 result={
-                    "prediction_id": str(pred.id), 
-                    "text": text,
-                    "prediction": 1 if pred.is_spam else 0,
-                    "is_spam": pred.is_spam, 
-                    "probability": pred.probability
+                    "prediction_id":          str(pred.id),
+                    "text":                   text,
+                    "prediction":             1 if pred.is_spam else 0,
+                    "is_spam":                pred.is_spam,
+                    "probability":            pred.probability,
+                    "verdict":                ml_result.get("verdict", "spam" if pred.is_spam else "ham"),
+                    "confidence_tier":        ml_result.get("confidence_tier"),
+                    "threshold_used":         pred.threshold_used,
+                    # Spam type
+                    "spam_type":              pred.spam_type,
+                    "spam_type_confidence":   pred.spam_type_confidence,
+                    "spam_type_explanation":  pred.spam_type_explanation,
+                    "spam_scores": {
+                        "ai_spam":            pred.ai_spam_score,
+                        "traditional_spam":   pred.traditional_spam_score,
+                        "ham":                pred.ham_score,
+                    },
+                    # Hybrid intelligence
+                    "final_prediction":           ml_result.get("final_prediction"),
+                    "final_confidence":            ml_result.get("final_confidence"),
+                    "threat_level":               pred.threat_level,
+                    "ml_model_score":              pred.ml_model_score,
+                    "groq_semantic_score":         pred.groq_semantic_score,
+                    "heuristic_score":             pred.heuristic_score,
+                    "ai_generated_probability":    pred.ai_generated_probability,
+                    "phishing_probability":        pred.phishing_probability,
+                    "detected_categories":         pred.detected_categories,
+                    "reasoning":                   pred.reasoning,
+                    "recommended_action":          pred.recommended_action,
+                    "safe_for_user":               not pred.is_spam,
+                    "groq_available":              pred.groq_available,
+                    "feature_importance":          ml_result.get("feature_importance", []),
                 }
             )
     except Exception as e:
@@ -161,7 +188,11 @@ async def process_batch_job(
                         "row": i + 1,
                         "message": texts[i],
                         "verdict": "SPAM" if r["prediction"] == 1 else "HAM",
-                        "probability": r["probability"]
+                        "probability": r["probability"],
+                        "spam_type": r.get("spam_type"),
+                        "spam_type_confidence": r.get("spam_type_confidence"),
+                        "spam_type_explanation": r.get("spam_type_explanation"),
+                        "spam_scores": r.get("spam_scores")
                     }
                     for i, r in enumerate(flattened)
                 ],
@@ -210,22 +241,41 @@ async def store_prediction(
     await db.flush()   # get message.id without committing
 
     # ── Store the prediction ──────────────────────────────────────────────────
+    _scores = ml_result.get("spam_scores") or {}
     prediction = Prediction(
-        user_id         = user.id,
-        message_id      = message.id,
-        prediction      = ml_result["prediction"],
-        probability     = ml_result["probability"],
-        threshold_used  = ml_result["threshold_used"],
-        is_spam         = ml_result["prediction"] == 1,
-        latency_ms      = latency_ms,
-        model_version   = model_version,
+        user_id                  = user.id,
+        message_id               = message.id,
+        prediction               = ml_result["prediction"],
+        probability              = ml_result["probability"],
+        threshold_used           = ml_result["threshold_used"],
+        is_spam                  = ml_result["prediction"] == 1,
+        latency_ms               = latency_ms,
+        model_version            = model_version,
+        # Spam type
+        spam_type                = ml_result.get("spam_type"),
+        spam_type_confidence     = ml_result.get("spam_type_confidence"),
+        spam_type_explanation    = ml_result.get("spam_type_explanation"),
+        ai_spam_score            = _scores.get("ai_spam"),
+        traditional_spam_score   = _scores.get("traditional_spam"),
+        ham_score                = _scores.get("ham"),
+        # Hybrid intelligence (v8+)
+        threat_level             = ml_result.get("threat_level"),
+        ai_generated_probability = ml_result.get("ai_generated_probability"),
+        phishing_probability     = ml_result.get("phishing_probability"),
+        ml_model_score           = ml_result.get("ml_model_score"),
+        groq_semantic_score      = ml_result.get("groq_semantic_score"),
+        heuristic_score          = ml_result.get("heuristic_score"),
+        detected_categories      = ml_result.get("detected_categories"),
+        reasoning                = (ml_result.get("reasoning") or "")[:1000],
+        recommended_action       = (ml_result.get("recommended_action") or "")[:500],
+        groq_available           = ml_result.get("groq_available"),
     )
     db.add(prediction)
     await db.flush()
 
     logger.info(
-        "Stored prediction │ user=%s │ is_spam=%s │ prob=%.4f",
-        user.username, prediction.is_spam, prediction.probability,
+        "Stored prediction │ user=%s │ is_spam=%s │ prob=%.4f │ type=%s",
+        user.username, prediction.is_spam, prediction.probability, prediction.spam_type or "unknown",
     )
     return prediction
 
@@ -254,26 +304,48 @@ async def get_user_history(
     stmt = stmt.order_by(Prediction.predicted_at.desc())
 
     # Total count
-    count_stmt = select(func.count()).select_from(stmt.subquery())
-    total      = (await db.execute(count_stmt)).scalar_one()
+    count_stmt = select(func.count(Prediction.id)).where(Prediction.user_id == user.id)
+    if is_spam is not None:
+        count_stmt = count_stmt.where(Prediction.is_spam == is_spam)
+    total = (await db.execute(count_stmt)).scalar_one()
 
     # Paginated rows
     offset = (page - 1) * size
     rows   = (await db.execute(stmt.offset(offset).limit(size))).all()
 
-    items = [
-        HistoryItem(
-            id             = pred.id,
-            text           = text,
-            prediction     = pred.prediction,
-            probability    = pred.probability,
-            threshold_used = pred.threshold_used,
-            is_spam        = pred.is_spam,
-            predicted_at   = pred.predicted_at,
-            model_version  = pred.model_version,
-        )
-        for pred, text in rows
-    ]
+    items = []
+    for pred, text in rows:
+        try:
+            item = HistoryItem(
+                id             = pred.id,
+                text           = text,
+                prediction     = pred.prediction,
+                probability    = pred.probability,
+                threshold_used = pred.threshold_used,
+                is_spam        = pred.is_spam,
+                predicted_at   = pred.predicted_at,
+                model_version  = pred.model_version,
+                spam_type      = pred.spam_type,
+                spam_type_confidence = pred.spam_type_confidence,
+                spam_type_explanation = pred.spam_type_explanation,
+                spam_scores    = {"ai_spam": pred.ai_spam_score, "traditional_spam": pred.traditional_spam_score, "ham": pred.ham_score} if pred.ai_spam_score is not None else None,
+                # Hybrid Intelligence Fields
+                threat_level               = pred.threat_level,
+                ai_generated_probability   = pred.ai_generated_probability,
+                phishing_probability       = pred.phishing_probability,
+                detected_categories        = pred.detected_categories if isinstance(pred.detected_categories, list) else None,
+                reasoning                  = pred.reasoning,
+                recommended_action         = pred.recommended_action
+            )
+            items.append(item)
+        except Exception as e:
+            logger.error(f"History Mapping Error │ id={pred.id} │ error={e}")
+            # Fallback for broken rows
+            items.append(HistoryItem(
+                id=pred.id, text=text, prediction=pred.prediction, probability=pred.probability,
+                threshold_used=pred.threshold_used, is_spam=pred.is_spam, predicted_at=pred.predicted_at,
+                model_version=pred.model_version
+            ))
 
     return HistoryResponse(total=total, page=page, size=size, items=items)
 
@@ -568,6 +640,8 @@ async def export_user_predictions_csv(
             Prediction.model_version,
             Prediction.predicted_at,
             Prediction.latency_ms,
+            Prediction.spam_type,
+            Prediction.spam_type_confidence,
             User.username,
         )
         .join(SMSMessage, Prediction.message_id == SMSMessage.id)
@@ -592,8 +666,8 @@ async def export_user_predictions_csv(
     # Header
     writer.writerow([
         "id", "username", "message", "prediction", "probability",
-        "threshold_used", "is_spam", "verdict", "model_version",
-        "predicted_at", "latency_ms",
+        "threshold_used", "is_spam", "verdict", "spam_type", "spam_type_confidence", 
+        "model_version", "predicted_at", "latency_ms",
     ])
 
     # Handle empty data gracefully
@@ -613,6 +687,8 @@ async def export_user_predictions_csv(
             round(row.threshold_used, 6),
             row.is_spam,
             verdict,
+            row.spam_type or "",
+            round(row.spam_type_confidence, 4) if row.spam_type_confidence else "",
             row.model_version,
             row.predicted_at.isoformat() if row.predicted_at else "",
             round(row.latency_ms or 0, 2),

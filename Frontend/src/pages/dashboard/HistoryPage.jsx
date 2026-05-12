@@ -17,7 +17,35 @@ import { useStore } from "../../store/useStore";
 import { toast } from "react-hot-toast";
 import { VirtualList } from "../../components/ui/VirtualList";
 
-const LogItem = memo(({ msg }) => (
+const LogItem = memo(({ msg }) => {
+  const spamTypeConfig = {
+    ham: {
+      label: "Clean",
+      color: "emerald",
+      icon: ShieldCheck,
+    },
+    traditional_spam: {
+      label: "Trad. Spam",
+      color: "rose",
+      icon: ShieldAlert,
+    },
+    ai_spam: {
+      label: "AI Spam",
+      color: "purple",
+      icon: Zap,
+    },
+    suspicious: {
+      label: "Suspicious",
+      color: "amber",
+      icon: ShieldAlert,
+    }
+  };
+  
+  const sType = msg.spam_type || (msg.is_spam ? "traditional_spam" : "ham");
+  const tInfo = spamTypeConfig[sType] || spamTypeConfig.ham;
+  const Icon = tInfo.icon;
+
+  return (
   <div className="grid grid-cols-12 gap-6 px-8 py-4 items-center hover:bg-slate-50 transition-colors group border-b border-slate-100 bg-white">
     <div className="col-span-6 flex gap-4 items-start">
       <div className={`p-2.5 rounded-xl ${msg.is_spam ? "bg-rose-50 text-rose-500" : "bg-emerald-50 text-emerald-500"}`}>
@@ -35,9 +63,9 @@ const LogItem = memo(({ msg }) => (
     </div>
 
     <div className="col-span-3 flex justify-center">
-      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${msg.is_spam ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-emerald-50 border-emerald-100 text-emerald-600"} text-[9px] font-black tracking-widest uppercase`}>
-        {msg.is_spam ? <ShieldAlert size={12} /> : <ShieldCheck size={12} />}
-        {msg.is_spam ? "Spam" : "Clean"}
+      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border bg-${tInfo.color}-50 border-${tInfo.color}-100 text-${tInfo.color}-600 text-[9px] font-black tracking-widest uppercase`}>
+        <Icon size={12} />
+        {tInfo.label}
       </div>
     </div>
 
@@ -45,13 +73,13 @@ const LogItem = memo(({ msg }) => (
       <span className="text-xs font-black text-slate-900">{(msg.probability * 100).toFixed(0)}%</span>
       <div className="w-20 h-1 bg-slate-100 rounded-full overflow-hidden">
         <div 
-          className={`h-full ${msg.is_spam ? "bg-rose-500" : "bg-emerald-500"}`}
+          className={`h-full bg-${tInfo.color}-500`}
           style={{ width: `${msg.probability * 100}%` }}
         />
       </div>
     </div>
   </div>
-));
+)});
 
 const SkeletonRow = () => (
   <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center border-b border-slate-100">

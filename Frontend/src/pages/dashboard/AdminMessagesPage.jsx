@@ -20,11 +20,41 @@ import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import { VirtualList } from "../../components/ui/VirtualList";
 
-const MessageItem = memo(({ item, onDelete }) => (
+import { Zap } from "lucide-react";
+
+const MessageItem = memo(({ item, onDelete }) => {
+  const spamTypeConfig = {
+    ham: {
+      label: "Clean",
+      color: "emerald",
+      icon: ShieldCheck,
+    },
+    traditional_spam: {
+      label: "Trad. Spam",
+      color: "rose",
+      icon: ShieldAlert,
+    },
+    ai_spam: {
+      label: "AI Spam",
+      color: "purple",
+      icon: Zap,
+    },
+    suspicious: {
+      label: "Suspicious",
+      color: "amber",
+      icon: ShieldAlert,
+    }
+  };
+  
+  const sType = item.spam_type || (item.is_spam ? "traditional_spam" : "ham");
+  const tInfo = spamTypeConfig[sType] || spamTypeConfig.ham;
+  const Icon = tInfo.icon;
+
+  return (
   <div className="grid grid-cols-12 gap-6 px-8 py-4 items-center hover:bg-slate-50 transition-colors group border-b border-slate-100 bg-white">
     <div className="col-span-6 flex gap-4 items-start">
-      <div className={`p-2.5 rounded-xl ${item.is_spam ? "bg-rose-50 text-rose-500" : "bg-emerald-50 text-emerald-500"}`}>
-        {item.is_spam ? <ShieldAlert size={18} /> : <ShieldCheck size={18} />}
+      <div className={`p-2.5 rounded-xl bg-${tInfo.color}-50 text-${tInfo.color}-600`} title={tInfo.label}>
+        <Icon size={18} />
       </div>
       <div className="min-w-0">
         <p className="text-sm font-bold text-slate-800 truncate leading-snug group-hover:text-indigo-600 transition-colors">
@@ -48,7 +78,7 @@ const MessageItem = memo(({ item, onDelete }) => (
       <span className="text-xs font-black text-slate-900">{(item.probability * 100).toFixed(0)}%</span>
       <div className="w-20 h-1 bg-slate-100 rounded-full overflow-hidden">
         <div 
-          className={`h-full ${item.is_spam ? "bg-rose-500" : "bg-emerald-500"}`}
+          className={`h-full bg-${tInfo.color}-500`}
           style={{ width: `${item.probability * 100}%` }}
         />
       </div>
@@ -63,7 +93,7 @@ const MessageItem = memo(({ item, onDelete }) => (
       </button>
     </div>
   </div>
-));
+)});
 
 export const AdminMessagesPage = () => {
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
