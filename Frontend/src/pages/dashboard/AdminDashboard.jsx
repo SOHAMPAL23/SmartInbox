@@ -9,7 +9,10 @@ import {
   ShieldCheck,
   RefreshCw,
   Server,
-  Network
+  Network,
+  Zap,
+  Lock,
+  ArrowUpRight
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -21,28 +24,47 @@ import { toast } from "react-hot-toast";
 import { D3LineChart, D3BarChart, D3DonutChart } from "../../components/charts/D3Charts";
 import { DashboardSkeleton } from "../../components/ui/SkeletonLoaders";
 
-const StatCard = memo(({ label, value, icon: Icon, color }) => (
-  <div className="bg-white border border-zinc-200 p-5 rounded-2xl relative overflow-hidden transition-all hover:border-zinc-300">
-    <div className="flex justify-between items-start mb-3">
-      <div className={`p-2 rounded-lg bg-zinc-50 text-zinc-900 border border-zinc-100`}>
-        <Icon size={18} />
+const containerVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const itemVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
+};
+
+const StatCard = memo(({ label, value, icon: Icon, trend }) => (
+  <motion.div 
+    variants={itemVariants}
+    whileHover={{ y: -5 }}
+    className="bg-white border border-zinc-200 p-8 rounded-[2.5rem] relative overflow-hidden transition-all shadow-sm hover:shadow-xl hover:shadow-zinc-100"
+  >
+    <div className="flex justify-between items-start mb-6">
+      <div className={`p-4 rounded-2xl bg-zinc-900 text-white shadow-lg shadow-zinc-200`}>
+        <Icon size={20} />
       </div>
+      {trend && (
+        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-widest border border-emerald-100">
+          +{trend}%
+        </span>
+      )}
     </div>
-    <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">{label}</p>
-    <h3 className="text-2xl font-bold text-zinc-900 mt-1">{value}</h3>
-  </div>
+    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">{label}</p>
+    <h3 className="text-3xl font-black text-zinc-900 mt-2 tracking-tighter">{value}</h3>
+  </motion.div>
 ));
 
 const TabButton = memo(({ active, onClick, icon: Icon, label }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+    className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
       active 
-        ? "bg-zinc-900 text-white shadow-sm" 
-        : "text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50"
+        ? "bg-zinc-900 text-white shadow-xl shadow-zinc-200" 
+        : "text-zinc-400 hover:text-zinc-900 hover:bg-white"
     }`}
   >
-    <Icon size={14} />
+    <Icon size={16} />
     {label}
   </button>
 ));
@@ -102,11 +124,11 @@ export const AdminDashboard = () => {
   const mutation = useMutation({
     mutationFn: updateThreshold,
     onSuccess: () => {
-      toast.success("Synchronized.");
+      toast.success("Matrix Synchronized.");
       queryClient.invalidateQueries({ queryKey: ["modelInfo"] });
     },
     onError: () => {
-      toast.error("Failed.");
+      toast.error("Handshake failed.");
     }
   });
 
@@ -119,24 +141,44 @@ export const AdminDashboard = () => {
   const isUpdating = mutation.isLoading;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-in pb-12">
-      <div className="flex justify-between items-center bg-white p-8 rounded-2xl border border-zinc-200">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-zinc-900">Control Center</h1>
-          <p className="text-sm text-zinc-400 font-medium">Model Management & Oversight</p>
+    <motion.div 
+      variants={containerVariants}
+      initial="initial"
+      animate="animate"
+      className="max-w-6xl mx-auto space-y-10 pb-20"
+    >
+      {/* Admin Header */}
+      <motion.div 
+        variants={itemVariants}
+        className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-10 rounded-[3rem] border border-zinc-200 shadow-sm relative overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none">
+          <Settings size={200} className="text-zinc-900" />
         </div>
 
-        <div className="flex gap-2 p-1 bg-zinc-50 border border-zinc-100 rounded-xl">
+        <div className="space-y-4 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-100">
+            <Lock size={12} /> Root Access Confirmed
+          </div>
+          <h1 className="text-4xl font-black text-zinc-900 tracking-tighter">Command Center</h1>
+          <p className="text-sm text-zinc-400 font-medium max-w-lg leading-relaxed">
+            Neural architecture oversight and global node management. 
+            System version <span className="text-zinc-900 font-bold">v{modelInfo?.model_version}</span> is currently stable.
+          </p>
+        </div>
+
+        <div className="flex gap-2 p-1.5 bg-zinc-50 border border-zinc-100 rounded-2xl relative z-10">
           <TabButton active={tab === "model"} onClick={() => setTab("model")} icon={Cpu} label="Engine" />
           <TabButton active={tab === "analytics"} onClick={() => setTab("analytics")} icon={Activity} label="Traffic" />
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Users" value={quickStats?.total_users || 0} icon={Users} />
-        <StatCard label="Inferences" value={quickStats?.total_messages || 0} icon={Activity} />
-        <StatCard label="Spam" value={quickStats?.spam_count || 0} icon={ShieldCheck} />
-        <StatCard label="Rate" value={`${quickStats?.spam_rate || 0}%`} icon={TrendingUp} />
+      {/* Admin Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard label="Global Nodes" value={quickStats?.total_users || 0} icon={Users} trend="12" />
+        <StatCard label="Total Inferences" value={(quickStats?.total_messages || 0).toLocaleString()} icon={Activity} />
+        <StatCard label="Spam Intercepts" value={(quickStats?.spam_count || 0).toLocaleString()} icon={ShieldCheck} />
+        <StatCard label="Neural Precision" value={`${quickStats?.spam_rate || 0}%`} icon={TrendingUp} />
       </div>
 
       <AnimatePresence mode="wait">
@@ -145,67 +187,101 @@ export const AdminDashboard = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.15 }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-8"
         >
           {tab === "model" ? (
             <>
-              <div className="lg:col-span-1 bg-white border border-zinc-200 p-6 rounded-2xl space-y-8">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold uppercase tracking-wider">Configuration</h3>
-                  <p className="text-[10px] text-zinc-400 font-bold uppercase">v{modelInfo?.model_version}</p>
+              <div className="lg:col-span-1 bg-zinc-900 text-white rounded-[3rem] p-10 space-y-10 shadow-2xl shadow-zinc-200 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-12 opacity-[0.05] group-hover:rotate-12 transition-transform duration-700 pointer-events-none">
+                   <Zap size={180} />
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Engine Control</p>
+                  <h3 className="text-2xl font-black tracking-tight">Handshake Threshold</h3>
                 </div>
 
-                <div className="space-y-6 pt-6 border-t border-zinc-100">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Threshold</span>
-                    <span className="text-xl font-bold text-zinc-900 font-mono">{threshold.toFixed(2)}</span>
+                <div className="space-y-10 pt-6">
+                  <div className="flex justify-between items-end">
+                    <div className="space-y-1">
+                       <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Classification Bias</p>
+                       <p className="text-sm font-black text-white">Neural Sensitivity</p>
+                    </div>
+                    <span className="text-5xl font-black text-white tracking-tighter">{threshold.toFixed(2)}</span>
                   </div>
-                  <input 
-                    type="range" min="0.1" max="0.9" step="0.01" 
-                    value={threshold} 
-                    onChange={(e) => setThreshold(parseFloat(e.target.value))}
-                    className="w-full h-1 bg-zinc-100 rounded-full appearance-none cursor-pointer accent-zinc-900 border border-zinc-100"
-                  />
-                  <button 
+                  
+                  <div className="relative h-2 w-full bg-white/5 rounded-full border border-white/5 p-0.5">
+                    <input 
+                      type="range" min="0.1" max="0.9" step="0.01" 
+                      value={threshold} 
+                      onChange={(e) => setThreshold(parseFloat(e.target.value))}
+                      className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
+                    />
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-indigo-500 to-indigo-300 rounded-full"
+                      style={{ width: `${(threshold - 0.1) / 0.8 * 100}%` }}
+                    />
+                  </div>
+
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleUpdateThreshold}
                     disabled={isUpdating}
-                    className="w-full h-12 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl hover:bg-zinc-800 transition-all flex items-center justify-center gap-2"
+                    className="w-full h-16 bg-white text-zinc-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-xl"
                   >
-                    {isUpdating ? <RefreshCw className="animate-spin" size={14} /> : <ShieldCheck size={14} />}
-                    Sync Engine
-                  </button>
+                    {isUpdating ? <RefreshCw className="animate-spin" size={16} /> : <ShieldCheck size={16} />}
+                    Apply Threshold
+                  </motion.button>
                 </div>
               </div>
 
-              <div className="lg:col-span-2 bg-white border border-zinc-200 p-6 rounded-2xl space-y-6">
-                <h3 className="text-sm font-bold uppercase tracking-wider">Neural Weights</h3>
-                <div className="h-64">
-                  <D3BarChart data={importance} width={650} height={250} />
+              <div className="lg:col-span-2 bg-white border border-zinc-200 p-10 rounded-[3rem] space-y-8 shadow-sm">
+                <div className="flex justify-between items-center">
+                   <h3 className="text-[10px] font-black text-zinc-900 uppercase tracking-[0.2em] flex items-center gap-2">
+                     <Network size={16} className="text-indigo-600" /> Neural Feature Weights
+                   </h3>
+                </div>
+                <div className="h-80 w-full overflow-hidden">
+                  <D3BarChart data={importance} width={700} height={300} />
                 </div>
               </div>
             </>
           ) : (
             <>
-              <div className="lg:col-span-2 bg-white border border-zinc-200 p-6 rounded-2xl space-y-6">
-                <h3 className="text-sm font-bold uppercase tracking-wider">Throughput</h3>
-                <div className="h-80">
-                  <D3LineChart data={trafficData} width={650} height={300} />
+              <div className="lg:col-span-2 bg-white border border-zinc-200 p-10 rounded-[3rem] space-y-8 shadow-sm">
+                <div className="flex justify-between items-center">
+                   <h3 className="text-[10px] font-black text-zinc-900 uppercase tracking-[0.2em] flex items-center gap-2">
+                     <TrendingUp size={16} className="text-emerald-600" /> Global Throughput
+                   </h3>
+                </div>
+                <div className="h-96 w-full">
+                  <D3LineChart data={trafficData} width={700} height={350} />
                 </div>
               </div>
 
-              <div className="lg:col-span-1 bg-white border border-zinc-200 p-6 rounded-2xl space-y-6">
-                <h3 className="text-sm font-bold uppercase tracking-wider">Distribution</h3>
-                <div className="h-80 flex items-center justify-center">
-                  <D3DonutChart data={userDist} size={240} />
+              <div className="lg:col-span-1 bg-white border border-zinc-200 p-10 rounded-[3rem] space-y-8 shadow-sm">
+                <h3 className="text-[10px] font-black text-zinc-900 uppercase tracking-[0.2em]">Node Distribution</h3>
+                <div className="h-96 flex flex-col items-center justify-center">
+                  <D3DonutChart data={userDist} size={280} />
+                  <div className="mt-8 grid grid-cols-2 gap-4 w-full">
+                     {userDist.slice(0, 4).map((u, i) => (
+                       <div key={i} className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500'][i]}`} />
+                          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest truncate">{u.label}</span>
+                       </div>
+                     ))}
+                  </div>
                 </div>
               </div>
             </>
           )}
         </motion.div>
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };
 
 export default AdminDashboard;
+

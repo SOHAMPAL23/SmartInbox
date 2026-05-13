@@ -1,9 +1,26 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, ShieldCheck, Zap, ChevronRight } from "lucide-react";
+import { Mail, Lock, User, ShieldCheck, Zap, Fingerprint, Activity, ChevronRight } from "lucide-react";
 import { registerUser } from "../../api/authApi";
 import { toast } from "react-hot-toast";
+import Logo from "../../components/ui/Logo";
+
+const containerVariants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
+};
 
 export const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,13 +32,13 @@ export const Register = () => {
     setIsLoading(true);
     try {
       await registerUser(formData);
-      toast.success("Identity established.");
+      toast.success("Identity established. Access granted.");
       navigate("/login");
     } catch (err) {
       const detail = err.response?.data?.detail;
       const message = Array.isArray(detail) 
         ? detail.map(d => d.msg).join(", ") 
-        : detail || "Registration failed.";
+        : detail || "Enrollment failed.";
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -29,100 +46,123 @@ export const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 px-4 font-sans">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 font-sans relative overflow-hidden">
+      {/* Soft Background Decorations */}
+      <div className="absolute inset-0 pointer-events-none">
+        <motion.div 
+          animate={{ 
+            opacity: [0.3, 0.5, 0.3],
+            scale: [1, 1.2, 1]
+          }}
+          transition={{ duration: 10, repeat: Infinity }}
+          className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-emerald-100/50 rounded-full blur-[120px]" 
+        />
+        <motion.div 
+          animate={{ 
+            opacity: [0.2, 0.4, 0.2],
+            scale: [1, 1.1, 1]
+          }}
+          transition={{ duration: 7, repeat: Infinity }}
+          className="absolute bottom-[-15%] left-[-10%] w-[900px] h-[900px] bg-indigo-50 rounded-full blur-[140px]" 
+        />
+      </div>
+
       <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[420px] bg-white p-10 rounded-[2.5rem] border border-zinc-200"
+        variants={containerVariants}
+        initial="initial"
+        animate="animate"
+        className="w-full max-w-[480px] bg-white p-12 rounded-[3.5rem] border border-slate-200 shadow-2xl shadow-emerald-100/50 relative z-10"
       >
-        <div className="flex flex-col items-center mb-12">
-          <div className="p-4 bg-zinc-900 rounded-2xl mb-6">
-            <Zap className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Create Identity</h1>
-          <p className="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase mt-3">
-            Join the SmartInbox Network
+        <motion.div variants={itemVariants} className="flex flex-col items-center mb-10">
+          <Logo size="lg" />
+          <p className="text-[10px] font-black tracking-[0.4em] text-slate-400 uppercase mt-4">
+            Enrollment Protocol
           </p>
-        </div>
+        </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1">Username</label>
+          <motion.div variants={itemVariants} className="space-y-3">
+            <label className="text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase ml-2">Codename</label>
             <div className="relative group">
-              <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
+              <Fingerprint size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-600 transition-colors" />
               <input 
                 type="text" 
                 required 
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full pl-12 pr-4 h-14 rounded-2xl border border-zinc-200 bg-white text-sm text-zinc-900 focus:outline-none focus:border-zinc-900 transition-all"
-                placeholder="agent_smartinbox"
+                className="w-full pl-14 pr-6 h-14 rounded-2xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all placeholder:text-slate-300"
+                placeholder="agent_001"
               />
             </div>
-          </div>
+          </motion.div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1">Email</label>
+          <motion.div variants={itemVariants} className="space-y-3">
+            <label className="text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase ml-2">Communication Link</label>
             <div className="relative group">
-              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
+              <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-600 transition-colors" />
               <input 
                 type="email" 
                 required 
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full pl-12 pr-4 h-14 rounded-2xl border border-zinc-200 bg-white text-sm text-zinc-900 focus:outline-none focus:border-zinc-900 transition-all"
+                className="w-full pl-14 pr-6 h-14 rounded-2xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all placeholder:text-slate-300"
                 placeholder="agent@smartinbox.ai"
               />
             </div>
-          </div>
+          </motion.div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1">Passphrase</label>
+          <motion.div variants={itemVariants} className="space-y-3">
+            <label className="text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase ml-2">Secure Passphrase</label>
             <div className="relative group">
-              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
+              <Lock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-600 transition-colors" />
               <input 
                 type="password" 
                 required 
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full pl-12 pr-4 h-14 rounded-2xl border border-zinc-200 bg-white text-sm text-zinc-900 focus:outline-none focus:border-zinc-900 transition-all tracking-widest"
+                className="w-full pl-14 pr-6 h-14 rounded-2xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-widest placeholder:text-slate-300"
                 placeholder="••••••••"
               />
             </div>
-          </div>
+          </motion.div>
 
-          <button 
+          <motion.button 
+            variants={itemVariants}
             type="submit" 
             disabled={isLoading}
-            className="w-full h-14 mt-4 bg-zinc-900 text-white rounded-2xl flex items-center justify-center gap-3 text-[11px] font-bold tracking-[0.15em] uppercase hover:bg-zinc-800 transition-all disabled:opacity-50"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full h-16 mt-4 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-4 text-[11px] font-black tracking-[0.2em] uppercase hover:bg-emerald-600 transition-all duration-300 disabled:opacity-50 shadow-xl shadow-slate-200"
           >
             {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <Activity className="w-5 h-5 animate-spin" />
             ) : (
               <>
-                Initialize
-                <ChevronRight size={18} />
+                Initialize Enrollment
+                <ChevronRight size={20} />
               </>
             )}
-          </button>
+          </motion.button>
         </form>
         
-        <div className="mt-10 text-center">
-           <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-             Already authorized? {" "}
-             <Link to="/login" className="text-zinc-900 hover:underline transition-colors ml-1">
-               Return to Login
+        <motion.div variants={itemVariants} className="mt-10 text-center">
+           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+             Authorized already? {" "}
+             <Link to="/login" className="text-emerald-600 hover:underline transition-colors ml-1">
+               Identity Verification
              </Link>
            </p>
-        </div>
+        </motion.div>
 
-        <div className="mt-10 flex items-center justify-center gap-8 text-[9px] font-bold text-zinc-300 uppercase tracking-[0.2em] border-t border-zinc-100 pt-10">
-          <span className="flex items-center gap-2"><Lock size={12} /> TLS 1.3</span>
-          <span className="flex items-center gap-2"><ShieldCheck size={12} /> Verified</span>
-        </div>
+        <motion.div variants={itemVariants} className="mt-10 flex items-center justify-center gap-8 text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] border-t border-slate-100 pt-10">
+          <span className="flex items-center gap-2"><Lock size={12} /> Quantum Shield</span>
+          <span className="flex items-center gap-2"><Zap size={12} /> Neural Ready</span>
+        </motion.div>
       </motion.div>
     </div>
   );
 };
 
 export default Register;
+
+
