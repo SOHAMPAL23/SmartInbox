@@ -8,6 +8,25 @@
 # ──────────────────────────────────────────────────────────────────────────────
 
 services:
+  # ── Local PostgreSQL Database ────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: smartinbox-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: smartinbox
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ── FastAPI Backend ─────────────────────────────────────────────────────────
   backend:
     build:
@@ -15,13 +34,16 @@ services:
       dockerfile: Dockerfile.backend
     container_name: smartinbox-api
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     env_file: .env
     environment:
       APP_NAME: "SmartInbox – SMS Spam Detection API"
       APP_VERSION: "1.0.0"
       DEBUG: "false"
       ENVIRONMENT: "production"
-      # DATABASE_URL loaded from .env (points to Neon)
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/smartinbox"
       ALGORITHM: "HS256"
       ACCESS_TOKEN_EXPIRE_MINUTES: "60"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
@@ -38,7 +60,7 @@ services:
       - ./ml/models:/app/ml/models
       - ./ml/artifacts:/app/ml/artifacts
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 20s
       timeout: 10s
       retries: 5
@@ -59,7 +81,11 @@ services:
     ports:
       - "3000:80"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80"]
       interval: 15s
       timeout: 5s
       retries: 3
+
+volumes:
+  postgres_data:
+

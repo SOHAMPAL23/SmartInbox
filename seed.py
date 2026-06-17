@@ -1,81 +1,105 @@
 """
 seed.py  — SmartInbox database seeder
 Seeds the admin user (idempotent: updates if exists, skips if already set up).
-Works with asyncpg (Neon) by converting the asyncpg URL to a sync psycopg2 URL.
+Uses the application's existing AsyncSessionLocal and SQLAlchemy models.
 """
-import re
-import os
+import sys
 import asyncio
-
-import psycopg2
-from passlib.context import CryptContext
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv(".env")
+# Load environment variables
+load_dotenv()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-admin_password = pwd_context.hash("Admin@123")
+# Ensure the project root is on sys.path
+ROOT = Path(__file__).resolve().parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
+# If running outside Docker, register 'Backend' folder as 'app' package
+if (ROOT / "Backend").exists() and not (ROOT / "app").exists():
+    import Backend
+    sys.modules["app"] = Backend
+    
+    import importlib
+    import pkgutil
+    def _register_subpackages(backend_pkg_name: str, app_alias: str) -> None:
+        try:
+            pkg = importlib.import_module(backend_pkg_name)
+            sys.modules[app_alias] = pkg
+            pkg_path = getattr(pkg, "__path__", None)
+            if pkg_path is not None:
+                for finder, subname, ispkg in pkgutil.walk_packages(
+                    path=pkg_path,
+                    prefix=f"{backend_pkg_name}.",
+                    onerror=lambda name: None,
+                ):
+                    try:
+                        submod = importlib.import_module(subname)
+                        alias = subname.replace(backend_pkg_name, app_alias, 1)
+                        sys.modules[alias] = submod
+                    except ImportError:
+                        pass
+        except Exception:
+            pass
+    _register_subpackages("Backend", "app")
 
-def _make_sync_url(async_url: str) -> str:
-    """
-    Convert a postgresql+asyncpg:// URL to a postgresql:// URL that psycopg2
-    can use directly.  Handles the ?ssl=require query param.
-    """
-    # Strip the +asyncpg driver part
-    url = async_url.replace("postgresql+asyncpg://", "postgresql://")
-    # asyncpg uses ?ssl=require, psycopg2 uses ?sslmode=require
-    url = url.replace("?ssl=require", "?sslmode=require")
-    return url
+# Now we can safely import from app
+from app.database import AsyncSessionLocal, create_tables
+from app.models.user import User, UserRole
+from app.auth.password import hash_password
 
+admin_password = hash_password("Admin@123")
+
+async def seed_async():
+    print("Database seeding started...")
+    
+    # 1. Ensure tables exist first
+    print("Verifying database schema / creating tables...")
+    await create_tables()
+    
+    # 2. Seed default admin user
+    async with AsyncSessionLocal() as session:
+        from sqlalchemy import select
+        stmt = select(User).where(User.email == "admin@smartinbox.com")
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        
+        if user:
+            user.hashed_password = admin_password
+            user.role = UserRole.admin
+            user.is_active = True
+            print("Updated existing admin@smartinbox.com — password and admin role set.")
+        else:
+            new_user = User(
+                email="admin@smartinbox.com",
+                username="SuperAdmin",
+                hashed_password=admin_password,
+                role=UserRole.admin,
+                is_active=True
+            )
+            session.add(new_user)
+            print("Created new Admin! Email: admin@smartinbox.com | Password: Admin@123")
+        
+        await session.commit()
+    print("Seed completed successfully.")
 
 def seed():
-    database_url = os.getenv("DATABASE_URL", "")
-    if not database_url:
-        print("Seed skipped: DATABASE_URL not set.")
-        return
-
-    sync_url = _make_sync_url(database_url)
-
-    try:
-        conn = psycopg2.connect(sync_url)
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "SELECT id FROM users WHERE email = %s", ("admin@smartinbox.com",)
-        )
-        if cursor.fetchone():
-            cursor.execute(
-                "UPDATE users SET hashed_password=%s, role='admin', is_active=true "
-                "WHERE email = %s",
-                (admin_password, "admin@smartinbox.com"),
-            )
-            print(
-                "Updated existing admin@smartinbox.com — password and admin role set."
-            )
-        else:
-            cursor.execute(
-                "INSERT INTO users (email, username, hashed_password, role, is_active) "
-                "VALUES (%s, %s, %s, %s, %s)",
-                (
-                    "admin@smartinbox.com",
-                    "SuperAdmin",
-                    admin_password,
-                    "admin",
-                    True,
-                ),
-            )
-            print(
-                "Created new Admin! Email: admin@smartinbox.com | Password: Admin@123"
-            )
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print("Seed completed successfully.")
-    except Exception as e:
-        print(f"Seed failed: {e}")
-
+    # Wait for database connection retries (essential for slow db container startup)
+    max_retries = 10
+    retry_delay = 3
+    
+    for attempt in range(1, max_retries + 1):
+        try:
+            asyncio.run(seed_async())
+            break
+        except Exception as e:
+            print(f"Seed attempt {attempt}/{max_retries} failed: {e}")
+            if attempt == max_retries:
+                print("All seed attempts failed. Exiting.")
+                sys.exit(1)
+            print(f"Retrying in {retry_delay}s...")
+            asyncio.run(asyncio.sleep(retry_delay))
 
 if __name__ == "__main__":
     seed()
