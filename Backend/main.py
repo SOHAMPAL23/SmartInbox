@@ -197,6 +197,13 @@ async def root():
     }
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Favicon endpoint to avoid 404/500 noise."""
+    from fastapi import Response
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @app.get(
     "/health",
     tags=["General"],
