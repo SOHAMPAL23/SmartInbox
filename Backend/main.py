@@ -114,13 +114,15 @@ async def lifespan(app: FastAPI):
             "ML model failed to load: %s — predictions will be unavailable.\n%s", exc, traceback.format_exc()
         )
 
-    # ── Background Workers ───────────────────────────────────────────────────
-    try:
-        from app.services.precompute_worker import precompute_analytics_loop
-        asyncio.create_task(precompute_analytics_loop())
-        logger.info("Precompute Analytics Worker started in background.")
-    except Exception as e:
-        logger.error(f"Failed to start precompute worker: {e}")
+    # ── Background Workers (Skip in serverless like Vercel) ───────────────────
+    import os
+    if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        try:
+            from app.services.precompute_worker import precompute_analytics_loop
+            asyncio.create_task(precompute_analytics_loop())
+            logger.info("Precompute Analytics Worker started in background.")
+        except Exception as e:
+            logger.error(f"Failed to start precompute worker: {e}")
 
     logger.info("═══ SmartInbox API ready ═══")
     yield

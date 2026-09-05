@@ -45,6 +45,12 @@ logger = logging.getLogger("ml.feature_pipeline")
 
 def init_nltk():
     try:
+        import tempfile
+        import os
+        nltk_data_dir = os.path.join(tempfile.gettempdir(), "nltk_data")
+        if nltk_data_dir not in nltk.data.path:
+            nltk.data.path.append(nltk_data_dir)
+
         for resource in [
             "tokenizers/punkt",
             "corpora/stopwords",
@@ -56,7 +62,7 @@ def init_nltk():
                 nltk.data.find(resource)
             except LookupError:
                 logger.info("[NLTK] Downloading missing resource: %s", resource)
-                nltk.download(resource.split("/")[-1], quiet=True)
+                nltk.download(resource.split("/")[-1], download_dir=nltk_data_dir, quiet=True)
     except Exception as exc:
         logger.warning("[NLTK] Initialization warning (%s). Proceeding anyway.", exc)
 

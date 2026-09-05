@@ -58,23 +58,27 @@ def configure_logging() -> None:
     console_handler.setFormatter(formatter)
     console_handler.setLevel(level)
 
-    #  File handler (rotating, 10 MB, keep 5 backups) 
-    log_path = Path(settings.LOG_FILE)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    file_handler = logging.handlers.RotatingFileHandler(
-        log_path, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
-    )
-    file_handler.setFormatter(formatter)
-    file_handler.setLevel(level)
-
-    #  Root logger 
+    # ── Root logger ───────────────────────────────────────────────────────────
     root = logging.getLogger()
     root.setLevel(level)
     # Avoid adding duplicate handlers on reload
     if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
         root.addHandler(console_handler)
-    if not any(isinstance(h, logging.handlers.RotatingFileHandler) for h in root.handlers):
-        root.addHandler(file_handler)
+
+    # ── File handler (rotating, 10 MB, keep 5 backups) ────────────────────────
+    # Wrapped in try-except for serverless environments (like Vercel / AWS Lambda) where FS is read-only
+    try:
+        log_path = Path(settings.LOG_FILE)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        file_handler = logging.handlers.RotatingFileHandler(
+            log_path, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
+        )
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(level)
+        if not any(isinstance(h, logging.handlers.RotatingFileHandler) for h in root.handlers):
+            root.addHandler(file_handler)
+    except Exception as exc:
+        logging.getLogger("core.logging").warning("File logging disabled (read-only filesystem or path error): %s", exc)
 
     # Quiet noisy third-party loggers
     for noisy in ("uvicorn.access", "passlib", "sqlalchemy.engine"):

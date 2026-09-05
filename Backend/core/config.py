@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     def assemble_db_url(cls, v: str) -> str:
         if not v:
             return v
+        import os
+        if ("VERCEL" in os.environ or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")) and v.startswith("sqlite+aiosqlite:///./"):
+            v = "sqlite+aiosqlite:////tmp/smartinbox.db"
         if v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgresql://"):
