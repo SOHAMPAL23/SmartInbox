@@ -1,0 +1,8 @@
+[project]
+name = "smartinbox"
+version = "2.0.0"
+description = "SmartInbox - AI SMS Spam Detection API"
+requires-python = ">=3.11"
+
+[tool.fastapi]
+entrypoint = "run:app"
