@@ -11,4 +11,3 @@ if str(ROOT) not in sys.path:
 from run import app
 
 __all__ = ["app"]
-
