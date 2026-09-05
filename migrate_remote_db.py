@@ -1,15 +1,48 @@
+import sys
 import asyncio
 import os
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
     print("DATABASE_URL not found in environment.")
     exit(1)
+
+# Normalize database URL protocol to asyncpg for async connection
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+# Clean query parameters for asyncpg compatibility
+if "postgresql+asyncpg://" in DATABASE_URL:
+    from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+    try:
+        parsed = urlparse(DATABASE_URL)
+        query_params = parse_qs(parsed.query)
+        if "sslmode" in query_params:
+            sslmode_val = query_params.pop("sslmode")[0]
+            if sslmode_val in ("require", "verify-ca", "verify-full"):
+                query_params["ssl"] = ["require"]
+        query_params.pop("channel_binding", None)
+        new_query = urlencode(query_params, doseq=True)
+        DATABASE_URL = urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            new_query,
+            parsed.fragment
+        ))
+    except Exception:
+        pass
 
 async def migrate():
     print(f"Connecting to {DATABASE_URL.split('@')[-1]}...")

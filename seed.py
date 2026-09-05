@@ -5,11 +5,14 @@ Uses the application's existing AsyncSessionLocal and SQLAlchemy models.
 """
 import sys
 import asyncio
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 # Ensure the project root is on sys.path
 ROOT = Path(__file__).resolve().parent

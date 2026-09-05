@@ -1,4 +1,3 @@
-
 # ──────────────────────────────────────────────────────────────────────────────
 # SmartInbox – Docker Compose (Neon DB edition)
 #
@@ -22,7 +21,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -39,11 +38,11 @@ services:
         condition: service_healthy
     env_file: .env
     environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/smartinbox"
       APP_NAME: "SmartInbox – SMS Spam Detection API"
       APP_VERSION: "1.0.0"
       DEBUG: "false"
       ENVIRONMENT: "production"
-      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/smartinbox"
       ALGORITHM: "HS256"
       ACCESS_TOKEN_EXPIRE_MINUTES: "60"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
@@ -52,6 +51,7 @@ services:
       MODEL_VERSION: "v7"
       ADMIN_SETUP_KEY: "SmartInbox@Admin2026"
       ALLOWED_ORIGINS: '["http://localhost:3000","http://localhost:5173","http://localhost"]'
+      PORT: "8000"
     ports:
       - "8000:8000"
     volumes:
@@ -60,7 +60,7 @@ services:
       - ./ml/models:/app/ml/models
       - ./ml/artifacts:/app/ml/artifacts
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')" ]
       interval: 20s
       timeout: 10s
       retries: 5
@@ -81,7 +81,7 @@ services:
     ports:
       - "3000:80"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80"]
+      test: [ "CMD", "wget", "-q", "--spider", "http://127.0.0.1:80" ]
       interval: 15s
       timeout: 5s
       retries: 3

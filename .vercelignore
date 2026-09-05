@@ -1,0 +1,9 @@
+.git
+.venv
+Frontend/node_modules
+Frontend/dist
+smartinbox.db
+logs/
+scratch/
+__pycache__
+*.pyc

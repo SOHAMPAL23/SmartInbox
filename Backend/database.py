@@ -11,17 +11,28 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-# ── Engine (connection pool tuned for Neon / Serverless Postgres) ─────────────
+is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+
+engine_kwargs = {
+    "echo": settings.DEBUG,
+}
+
+if is_sqlite:
+    engine_kwargs["connect_args"] = {}
+else:
+    engine_kwargs.update({
+        "pool_size": settings.DATABASE_POOL_SIZE,
+        "max_overflow": settings.DATABASE_MAX_OVERFLOW,
+        "pool_pre_ping": True,
+        "pool_recycle": 600,
+        "connect_args": {
+            "command_timeout": 30,
+        }
+    })
+
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_size=settings.DATABASE_POOL_SIZE,
-    max_overflow=settings.DATABASE_MAX_OVERFLOW,
-    pool_pre_ping=True,            # essential for handling Neon cold starts/idle timeouts
-    pool_recycle=600,              # recycle faster for serverless environments (10 min)
-    connect_args={
-        "command_timeout": 30,     # fail fast on long-running connections
-    }
+    **engine_kwargs
 )
 
 # ── Session factory ───────────────────────────────────────────────────────────

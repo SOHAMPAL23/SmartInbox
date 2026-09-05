@@ -19,11 +19,15 @@ What this file does:
 import importlib
 import pkgutil
 import sys
+import asyncio
 from pathlib import Path
 from dotenv import load_dotenv
 
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 # Load environment variables from .env file immediately
-load_dotenv()
+load_dotenv(override=True)
 
 # ── 1. Ensure the project root is on sys.path ────────────────────────────────
 ROOT = Path(__file__).resolve().parent
