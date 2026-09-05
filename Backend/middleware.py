@@ -71,6 +71,7 @@ class GlobalExceptionMiddleware(BaseHTTPMiddleware):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={
                     "detail":     "An internal server error occurred.",
+                    "error":      str(exc),
                     "request_id": request_id,
                 },
             )

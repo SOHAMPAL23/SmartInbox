@@ -62,34 +62,12 @@ async def lifespan(app: FastAPI):
         settings.ENVIRONMENT, settings.DEBUG, settings.MODEL_VERSION,
     )
 
-    # ── Database Connectivity Check (Asynchronous) ────────────────────────────
-    async def init_db():
-        try:
-            from app.database import AsyncSessionLocal
-            from sqlalchemy import text
-            
-            connected = False
-            retries = 3
-            while not connected and retries > 0:
-                try:
-                    async with AsyncSessionLocal() as session:
-                        await session.execute(text("SELECT 1"))
-                    connected = True
-                    logger.info("Database connectivity verified. [Neon/Serverless Postgres]")
-                except Exception as e:
-                    retries -= 1
-                    logger.warning(f"Database connection failed. Retrying in 2s... ({retries} retries left)")
-                    await asyncio.sleep(2)
-            
-            if not connected:
-                logger.error("Failed to connect to database after multiple retries. API may be degraded.")
-            else:
-                await create_tables()
-                logger.info("Database schema verified / created.")
-        except Exception as exc:
-            logger.error("Error during database initialization: %s", exc)
-
-    asyncio.create_task(init_db())
+    # ── Database Initialization ───────────────────────────────────────────────
+    try:
+        await create_tables()
+        logger.info("Database schema verified / created.")
+    except Exception as exc:
+        logger.warning("Database initialization warning: %s", exc)
 
 
     # ── Load ML model into memory ─────────────────────────────────────────────
@@ -182,6 +160,7 @@ app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins     = settings.ALLOWED_ORIGINS,
+    allow_origin_regex= r"https://.*\.vercel\.app|https://.*\.amplifyapp\.com",
     allow_credentials = True,
     allow_methods     = ["*"],
     allow_headers     = ["*"],
