@@ -278,8 +278,9 @@ async def get_debug_info():
 # This ensures that visiting smartinbox-nopk.onrender.com/login sends you to the real app.
 @app.get("/{path:path}", tags=["General"], include_in_schema=False)
 async def redirect_to_frontend(path: str):
-    """Redirect non-API requests to the Amplify frontend."""
-    frontend_url = "https://main.d2tsa0g3cou3c1.amplifyapp.com"
+    """Redirect non-API requests to the Frontend."""
+    import os
+    frontend_url = os.environ.get("FRONTEND_URL", "https://smart-inbox-pi.vercel.app")
     # Don't redirect API paths or docs (they should have been caught by routers above)
     if path.startswith(("api/", "docs", "redoc", "openapi.json", "debug/")):
         return JSONResponse(status_code=404, content={"detail": "Not Found"})

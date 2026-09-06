@@ -1,15 +1,13 @@
 {
-  "version": 2,
-  "builds": [
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm --prefix Frontend install",
+  "buildCommand": "npm --prefix Frontend run build",
+  "outputDirectory": "Frontend/dist",
+  "framework": "vite",
+  "rewrites": [
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/index.py"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

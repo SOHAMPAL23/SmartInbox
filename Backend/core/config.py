@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     ML_DIR: Path         = Path(__file__).resolve().parents[2] / "ml"
     MODEL_VERSION: str   = "v7"
     ALLOWED_ORIGINS: Any = [
+        "https://smart-inbox-pi.vercel.app",
         "https://main.d2tsa0g3cou3c1.amplifyapp.com",
         "http://localhost:5173",
         "http://localhost:3000",

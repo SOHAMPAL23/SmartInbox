@@ -2,7 +2,7 @@ import axios from "axios";
 
 import axiosRetry from "axios-retry";
 
-const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
+const API_URL = import.meta.env.VITE_API_URL || "https://smartinbox-nopk.onrender.com/api/v1";
 
 /** Extract access token from localStorage — used by REST client and WebSocket. */
 export const getAccessToken = () => {
